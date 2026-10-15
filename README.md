@@ -1,16 +1,31 @@
-# React + Vite
+# PawtoPaw 🐾 - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PawtoPaw es una aplicación web SPA (Single Page Application) diseñada como un marketplace y plataforma de servicios dedicados a las mascotas. Este proyecto representa el frontend interactivo, permitiendo a los usuarios registrarse, explorar publicaciones de productos/servicios y gestionar sus perfiles.
 
-Currently, two official plugins are available:
+## 🚀 Características Principales (Features)
+- **Exploración de Catálogo:** Galería dinámica de productos y servicios para mascotas renderizada mediante componentes reutilizables.
+- **Autenticación de Usuarios:** Vistas protegidas para inicio de sesión y registro de cuentas.
+- **Panel de Usuario:** Perfil privado con gestión de sesión y redirección programada.
+- **Navegación Fluida:** Enrutamiento del lado del cliente sin recargas de página.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Tecnologías Utilizadas
+- **Core:** React 18, Vite
+- **Navegación:** React Router DOM v6
+- **Estado Global:** Context API (React)
+- **Estilos y UI:** Bootstrap *(Base configurada para la maquetación estética)*
 
-## React Compiler
+## 💻 Instalación y Ejecución Local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Clonar el repositorio y entrar a la carpeta:
+    ```bash
+    git clone <tu-repositorio>
+    cd pawtopaw-frontend
+    ```
+2. Instalar las dependencias base:
+    ```bash
+    npm install
+    ```
+3. Iniciar el servidor de desarrollo local:
+    ```bash
+    npm run dev
+    ```
