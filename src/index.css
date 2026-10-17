@@ -1,7 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-pawPrimary: #D2B48C;   
+  --color-pawSecondary: #F5E6D3; 
+  --color-pawAccent: #FFDAB9;    
+  --color-pawText: #5C4033;      
+  --color-pawLight: #FFFDF9;     
+}
 
 body {
-  @apply bg-pawLight;
+  background-color: var(--color-pawLight);
+  color: var(--color-pawText);
 }
