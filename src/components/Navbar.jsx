@@ -2,13 +2,17 @@ import { Link } from 'react-router-dom';
 
 export default function Navbar() {
   return (
-    <nav style={{ padding: '1rem', background: '#f8f9fa', display: 'flex', gap: '1rem' }}>
-      <Link to="/" style={{ fontWeight: 'bold', textDecoration: 'none', color: '#333' }}>
-        PawtoPaw 🐾
-      </Link>
-      <Link to="/login" style={{ textDecoration: 'none', color: '#007bff' }}>Iniciar Sesión</Link>
-      <Link to="/registro" style={{ textDecoration: 'none', color: '#28a745' }}>Regístrate</Link>
-      <Link to="/perfil" style={{ textDecoration: 'none', color: '#6c757d' }}>Mi Perfil</Link>
+    <nav className="navbar navbar-expand-lg shadow-sm" style={{ backgroundColor: '#F5E6D3' }}>
+      <div className="container">
+        <Link className="navbar-brand fw-bold" to="/" style={{ color: '#5C4033' }}>
+          PawtoPaw 🐾
+        </Link>
+        <div className="navbar-nav ms-auto gap-3">
+          <Link className="nav-link fw-semibold" to="/login" style={{ color: '#8B5A2B' }}>Iniciar Sesión</Link>
+          <Link className="nav-link fw-semibold" to="/registro" style={{ color: '#8B5A2B' }}>Regístrate</Link>
+          <Link className="nav-link fw-semibold" to="/perfil" style={{ color: '#8B5A2B' }}>Mi Perfil</Link>
+        </div>
+      </div>
     </nav>
   );
 }

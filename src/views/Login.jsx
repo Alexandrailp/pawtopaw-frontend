@@ -17,23 +17,43 @@ export default function Login() {
   };
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '300px' }}>
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <input
-          type="email"
-          placeholder="name@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="******"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Iniciar Sesión</button>
-      </form>
+    <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: '#FDEBD0' }}>
+      <div className="card p-5 shadow border-0" style={{ width: '400px', backgroundColor: '#FFFDF9', borderRadius: '20px' }}>
+        <h3 className="mb-2 text-center fw-bold" style={{ color: '#5C4033' }}>PawtoPaw</h3>
+        <p className="mb-4 text-center" style={{ color: '#8B5A2B' }}>Inicia sesión para continuar</p>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label fw-semibold" style={{ color: '#5C4033' }}>Correo electrónico</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="grecia@ejemplo.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ borderRadius: '10px', borderColor: '#DEB887' }}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="form-label fw-semibold" style={{ color: '#5C4033' }}>Contraseña</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="******"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ borderRadius: '10px', borderColor: '#DEB887' }}
+            />
+          </div>
+          <div className="d-grid gap-2">
+            <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#A0522D', color: '#FFF', borderRadius: '10px' }}>
+              Iniciar Sesión
+            </button>
+            <button type="button" className="btn btn-link text-decoration-none" onClick={() => navigate('/')} style={{ color: '#8B5A2B' }}>
+              Volver al inicio
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
