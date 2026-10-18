@@ -1,31 +1,59 @@
 # PawtoPaw 🐾 - Frontend
 
-PawtoPaw es una aplicación web SPA (Single Page Application) diseñada como un marketplace y plataforma de servicios dedicados a las mascotas. Este proyecto representa el frontend interactivo, permitiendo a los usuarios registrarse, explorar publicaciones de productos/servicios y gestionar sus perfiles.
+Proyecto final desarrollado como una Single Page Application (SPA) que conecta a dueños de mascotas con productos y servicios de cuidadores (*petsitters*).
 
-## 🚀 Características Principales (Features)
-- **Exploración de Catálogo:** Galería dinámica de productos y servicios para mascotas renderizada mediante componentes reutilizables.
-- **Autenticación de Usuarios:** Vistas protegidas para inicio de sesión y registro de cuentas.
-- **Panel de Usuario:** Perfil privado con gestión de sesión y redirección programada.
-- **Navegación Fluida:** Enrutamiento del lado del cliente sin recargas de página.
+---
 
-## 🛠️ Tecnologías Utilizadas
-- **Core:** React 18, Vite
-- **Navegación:** React Router DOM v6
-- **Estado Global:** Context API (React)
-- **Estilos y UI:** Bootstrap *(Base configurada para la maquetación estética)*
+## 🛠️ Tecnologías
 
-## 💻 Instalación y Ejecución Local
+- **React 19** + **Vite**
+- **React Router DOM v7** (Enrutamiento del lado del cliente)
+- **Tailwind CSS** & **Bootstrap** (Diseño responsivo)
+- **Context API** (Gestión de estado global)
 
-1. Clonar el repositorio y entrar a la carpeta:
-    ```bash
-    git clone <tu-repositorio>
-    cd pawtopaw-frontend
-    ```
-2. Instalar las dependencias base:
-    ```bash
-    npm install
-    ```
-3. Iniciar el servidor de desarrollo local:
-    ```bash
-    npm run dev
-    ```
+---
+
+## 🚀 Instalación y Ejecución
+
+Sigue estos pasos en tu terminal para levantar el proyecto localmente:
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/Alexandrailp/pawtopaw-frontend.git
+```
+
+### 2. Entrar a la carpeta del proyecto
+```bash
+cd pawtopaw-frontend
+```
+
+### 3. Instalar dependencias
+```bash
+npm install
+```
+
+### 4. Iniciar el servidor local
+```bash
+npm run dev
+```
+
+### 5. Abrir la aplicación
+Visita en tu navegador: **[http://localhost:5173](http://localhost:5173)**
+
+---
+
+## 📍 Rutas Principales para Evaluar
+
+- **Inicio (`/`):**
+  - Carrusel interactivo en el hero.
+  - Accesos rápidos en la barra superior (🛍️ filtra productos y 🐕 filtra petsitters con desplazamiento automático).
+  - Filtro lateral por categorías (*Todos*, *Productos*, *Petsitter*) y menú para ordenar por precio o popularidad.
+- **Autenticación:**
+  - Inicio de Sesión (`/login`)
+  - Registro (`/registro`)
+- **Gestión de Perfil:**
+  - Ver Perfil (`/perfil`)
+  - Editar Perfil (`/editar-perfil`)
+- **Publicaciones:**
+  - Crear Publicación (`/crear-publicacion`)
+  - Detalle de la Publicación (`/publicacion/:id`)
