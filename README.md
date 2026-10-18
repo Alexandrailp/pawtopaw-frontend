@@ -2,6 +2,8 @@
 
 PawtoPaw es una aplicación web SPA (Single Page Application) diseñada como un marketplace y plataforma de servicios dedicados a las mascotas. Este proyecto representa el frontend interactivo, permitiendo a los usuarios registrarse, explorar publicaciones de productos/servicios y gestionar sus perfiles.
 
+🌐 **Sitio Web en Vivo:** [https://pawtopaw-frontend.vercel.app/](https://pawtopaw-frontend.vercel.app/)
+
 ## 🚀 Tecnologías Utilizadas
 
 * **React** (con Vite para un entorno de desarrollo rápido)
