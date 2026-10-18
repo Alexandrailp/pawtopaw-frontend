@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Card from '../components/Card';
 
 const heroSlides = [
@@ -38,9 +39,26 @@ const publicaciones = [
 ];
 
 export default function Home() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [orden, setOrden] = useState('');
-  const [filtroCategoria, setFiltroCategoria] = useState('todos');
+
+  const filtroCategoria = searchParams.get('categoria') || 'todos';
+
+  const scrollACatalogo = () => {
+    const catalogo = document.getElementById('catalogo');
+    if (catalogo) {
+      catalogo.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const cat = searchParams.get('categoria');
+    if (cat === 'producto' || cat === 'petsitter') {
+      const timer = setTimeout(scrollACatalogo, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
@@ -58,7 +76,14 @@ export default function Home() {
   }, [currentIndex]);
 
   const toggleCategoria = (cat) => {
-    setFiltroCategoria((prev) => (prev === cat ? 'todos' : cat));
+    const nueva = (filtroCategoria === cat || cat === 'todos') ? 'todos' : cat;
+    if (nueva === 'todos') {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('categoria');
+      setSearchParams(newParams, { replace: true });
+    } else {
+      setSearchParams({ categoria: nueva }, { replace: true });
+    }
   };
 
   const publicacionesFiltradas = publicaciones
@@ -126,7 +151,10 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-12 flex flex-col md:flex-row gap-8 items-start">
+      <div 
+        id="catalogo" 
+        className="mt-12 flex flex-col md:flex-row gap-8 items-start scroll-mt-6"
+      >
         <aside className="w-full md:w-64 shrink-0 bg-white border border-pawSecondary rounded-2xl p-6 shadow-sm">
           <div className="mb-6">
             <label htmlFor="ordenar-select" className="block font-bold text-pawText text-lg mb-3">
@@ -149,6 +177,14 @@ export default function Home() {
           <div className="border-t border-pawSecondary pt-6">
             <h4 className="font-bold text-pawText text-lg mb-3">Categorías</h4>
             <div className="flex flex-col gap-2 text-sm">
+              <button
+                onClick={() => toggleCategoria('todos')}
+                className={`text-left px-3 py-2 rounded-xl transition-colors cursor-pointer ${
+                  filtroCategoria === 'todos' ? 'bg-pawPrimary font-bold text-white' : 'hover:bg-pawSecondary/60 text-pawText/80'
+                }`}
+              >
+                Todos
+              </button>
               <button
                 onClick={() => toggleCategoria('producto')}
                 className={`text-left px-3 py-2 rounded-xl transition-colors cursor-pointer ${
@@ -173,6 +209,7 @@ export default function Home() {
           {publicacionesFiltradas.map((pub) => (
             <Card 
               key={pub.id}
+              id={pub.id}
               titulo={pub.titulo} 
               precio={pub.precio} 
               imagen={pub.imagen} 

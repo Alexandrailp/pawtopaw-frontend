@@ -1,6 +1,11 @@
-export default function Card({ titulo, precio, imagen, estrellas, cantidad }) {
+import { Link } from 'react-router-dom';
+
+export default function Card({ id, titulo, precio, imagen, estrellas, cantidad }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-pawSecondary overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer">
+    <Link
+      to={`/publicacion/${id || 1}`}
+      className="bg-white rounded-2xl shadow-sm border border-pawSecondary overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer text-decoration-none"
+    >
       <div className="h-52 bg-pawLight flex justify-center items-center p-4">
         <img src={imagen} alt={titulo} className="max-h-full object-contain mix-blend-multiply rounded-xl" />
       </div>
@@ -18,6 +23,6 @@ export default function Card({ titulo, precio, imagen, estrellas, cantidad }) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

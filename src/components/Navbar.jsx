@@ -1,6 +1,21 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleFiltrar = (categoria) => {
+    if (location.pathname === '/') {
+      const catalogo = document.getElementById('catalogo');
+      if (catalogo) {
+        catalogo.scrollIntoView({ behavior: 'smooth' });
+      }
+      navigate(`/?categoria=${categoria}`, { replace: true });
+    } else {
+      navigate(`/?categoria=${categoria}`);
+    }
+  };
+
   return (
     <nav className="bg-white shadow-sm py-4 border-b border-pawSecondary">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
@@ -28,8 +43,24 @@ export default function Navbar() {
 
         {/* Enlaces de Usuario (Solo Íconos) */}
         <div className="flex items-center gap-6 text-pawText">
-          <Link to="/" className="text-2xl hover:text-pawPrimary transition-colors" title="Productos">🛍️</Link>
-          <Link to="/" className="text-2xl hover:text-pawPrimary transition-colors" title="Petsitters">🐕</Link>
+          <button
+            type="button"
+            onClick={() => handleFiltrar('producto')}
+            className="text-2xl hover:text-pawPrimary hover:scale-110 transition-all cursor-pointer bg-transparent border-0 p-0"
+            title="Productos"
+            aria-label="Productos"
+          >
+            🛍️
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFiltrar('petsitter')}
+            className="text-2xl hover:text-pawPrimary hover:scale-110 transition-all cursor-pointer bg-transparent border-0 p-0"
+            title="Petsitters"
+            aria-label="Petsitters"
+          >
+            🐕
+          </button>
           
           <div className="flex gap-4 border-l border-pawPrimary pl-4">
             <Link to="/login" className="text-2xl hover:text-pawPrimary transition-colors" title="Cuenta">👤</Link>

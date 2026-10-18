@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 import Card from '../components/Card';
 
@@ -59,7 +59,7 @@ export default function Perfil() {
         <aside className="w-full md:w-80 shrink-0 bg-white border border-pawSecondary rounded-3xl p-8 shadow-sm flex flex-col items-center text-center">
           <div className="w-32 h-32 rounded-full bg-pawSecondary border-4 border-pawAccent flex items-center justify-center mb-4 shadow-xs overflow-hidden">
             <img
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300"
+              src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300'}
               alt="Foto de perfil"
               className="w-full h-full object-cover"
             />
@@ -76,12 +76,12 @@ export default function Perfil() {
           </p>
 
           <div className="w-full flex flex-col gap-3 border-t border-pawSecondary pt-6">
-            <button className="w-full bg-pawSecondary text-pawText font-bold py-3 rounded-full hover:bg-pawAccent transition-colors text-sm cursor-pointer">
+            <Link
+              to="/editar-perfil"
+              className="w-full bg-pawSecondary text-pawText font-bold py-3 rounded-full hover:bg-pawAccent transition-colors text-sm cursor-pointer"
+            >
               Editar perfil
-            </button>
-            <button className="w-full bg-pawLight border border-pawSecondary text-pawText font-semibold py-3 rounded-full hover:bg-pawSecondary/50 transition-colors text-sm cursor-pointer">
-              Mis favoritos
-            </button>
+            </Link>
             <button
               onClick={handleLogout}
               className="w-full bg-pawPrimary text-white font-bold py-3 rounded-full hover:opacity-90 transition-opacity text-sm mt-2 cursor-pointer"
@@ -140,15 +140,19 @@ export default function Perfil() {
                   Gestiona tus productos y servicios de petsitter activos
                 </p>
               </div>
-              <button className="bg-pawAccent text-pawText font-bold px-6 py-3 rounded-full hover:bg-pawPrimary hover:text-white transition-colors shadow-xs text-sm cursor-pointer">
+              <Link
+                to="/crear-publicacion"
+                className="bg-pawAccent text-pawText font-bold px-6 py-3 rounded-full hover:bg-pawPrimary hover:text-white transition-colors shadow-xs text-sm cursor-pointer"
+              >
                 + Nueva publicación
-              </button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {misPublicaciones.map((pub) => (
                 <Card
                   key={pub.id}
+                  id={pub.id}
                   titulo={pub.titulo}
                   precio={pub.precio}
                   imagen={pub.imagen}
