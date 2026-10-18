@@ -2,30 +2,47 @@
 
 PawtoPaw es una aplicación web SPA (Single Page Application) diseñada como un marketplace y plataforma de servicios dedicados a las mascotas. Este proyecto representa el frontend interactivo, permitiendo a los usuarios registrarse, explorar publicaciones de productos/servicios y gestionar sus perfiles.
 
-## 🚀 Características Principales (Features)
-- **Exploración de Catálogo:** Galería dinámica de productos y servicios para mascotas renderizada mediante componentes reutilizables.
-- **Autenticación de Usuarios:** Vistas protegidas para inicio de sesión y registro de cuentas.
-- **Panel de Usuario:** Perfil privado con gestión de sesión y redirección programada.
-- **Navegación Fluida:** Enrutamiento del lado del cliente sin recargas de página.
+## 🚀 Tecnologías Utilizadas
 
-## 🛠️ Tecnologías Utilizadas
-- **Core:** React 18, Vite
-- **Navegación:** React Router DOM v6
-- **Estado Global:** Context API (React)
-- **Estilos y UI:** Bootstrap *(Base configurada para la maquetación estética)*
+* **React** (con Vite para un entorno de desarrollo rápido)
+* **React Router DOM** (para la navegación entre vistas)
+* **Context API** (para la gestión global del estado de usuario)
+* **Tailwind CSS v4** (para el diseño visual personalizado con una paleta cálida y minimalista)
 
-## 💻 Instalación y Ejecución Local
+## ✨ Características Principales
 
-1. Clonar el repositorio y entrar a la carpeta:
-    ```bash
-    git clone <tu-repositorio>
-    cd pawtopaw-frontend
-    ```
-2. Instalar las dependencias base:
-    ```bash
-    npm install
-    ```
-3. Iniciar el servidor de desarrollo local:
-    ```bash
-    npm run dev
-    ```
+* **Diseño Visual Personalizado:** Paleta de colores cálidos (beige, durazno, café claro y blanco) configurada mediante variables en Tailwind.
+* **Carrusel Hero Interactivo:** Desplazamiento fluido y automático para destacar productos y servicios principales en la página de inicio.
+* **Catálogo y Filtros:** Grilla de publicaciones con opción de filtrado rápido por categoría (Productos o Petsitters) y un menú desplegable para ordenar por precio, popularidad y recomendaciones.
+* **Autenticación Simulada:** Vistas de Inicio de Sesión y Registro con fondos de patrones personalizados y validación de formularios.
+* **Sección Privada de Perfil:** Panel de gestión de usuario que incluye tarjeta de datos personales, historial de compras ("Mis Pedidos") y administración de publicaciones activas.
+* **Vistas de Gestión:** Formularios dedicados para la creación de nuevas publicaciones y la edición de los datos del perfil de usuario.
+
+## 🛠️ Instalación y Ejecución Local
+
+Sigue estos pasos para clonar y ejecutar el proyecto en tu computador:
+
+1. Clona el repositorio:
+
+``` Bash
+git clone [https://github.com/tu-usuario/pawtopaw-frontend.git](https://github.com/tu-usuario/pawtopaw-frontend.git)
+```
+
+2. Entra a la carpeta del proyecto:
+
+```Bash
+cd pawtopaw-frontend
+```
+
+3. Instala las dependencias:
+
+```Bash
+npm install
+```
+
+4. Inicia el servidor de desarrollo:
+
+```Bash
+npm run dev
+```
+5. Abre el enlace local proporcionado por Vite en tu navegador (usualmente http://localhost:5173).
