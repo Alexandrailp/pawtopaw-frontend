@@ -46,6 +46,7 @@ export default function Home() {
   const { publicaciones: publicacionesBackend } = useContext(UserContext);
 
   const filtroCategoria = searchParams.get('categoria') || 'todos';
+  const terminoBusqueda = (searchParams.get('buscar') || '').toLowerCase().trim();
 
   const scrollACatalogo = () => {
     const catalogo = document.getElementById('catalogo');
@@ -56,7 +57,8 @@ export default function Home() {
 
   useEffect(() => {
     const cat = searchParams.get('categoria');
-    if (cat === 'producto' || cat === 'petsitter') {
+    const busqueda = searchParams.get('buscar');
+    if (cat === 'producto' || cat === 'petsitter' || busqueda) {
       const timer = setTimeout(scrollACatalogo, 100);
       return () => clearTimeout(timer);
     }
@@ -93,7 +95,14 @@ export default function Home() {
     : publicaciones;
 
   const publicacionesFiltradas = listaPublicaciones
-    .filter((pub) => (filtroCategoria === 'todos' ? true : pub.categoria === filtroCategoria))
+    .filter((pub) => {
+      const coincideCategoria = filtroCategoria === 'todos' ? true : pub.categoria === filtroCategoria;
+      const coincideBusqueda = !terminoBusqueda
+        ? true
+        : (pub.titulo && pub.titulo.toLowerCase().includes(terminoBusqueda)) ||
+          (pub.descripcion && pub.descripcion.toLowerCase().includes(terminoBusqueda));
+      return coincideCategoria && coincideBusqueda;
+    })
     .sort((a, b) => {
       if (orden === 'mayor-menor') return b.precio - a.precio;
       if (orden === 'menor-mayor') return a.precio - b.precio;
@@ -211,18 +220,49 @@ export default function Home() {
           </div>
         </aside>
 
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {publicacionesFiltradas.map((pub) => (
-            <Card 
-              key={pub.id}
-              id={pub.id}
-              titulo={pub.titulo} 
-              precio={pub.precio} 
-              imagen={pub.imagen} 
-              estrellas={pub.estrellas} 
-              cantidad={pub.cantidad}
-            />
-          ))}
+        <div className="flex-1 w-full flex flex-col gap-6">
+          {terminoBusqueda && (
+            <div className="bg-pawLight border border-pawSecondary rounded-2xl px-5 py-3 flex items-center justify-between shadow-2xs">
+              <p className="text-sm text-pawText font-medium">
+                Resultados para: <span className="font-extrabold text-pawText">"{terminoBusqueda}"</span>
+                <span className="text-xs text-pawText/60 ml-2 font-bold">({publicacionesFiltradas.length} encontrados)</span>
+              </p>
+              <button
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.delete('buscar');
+                  setSearchParams(newParams);
+                }}
+                className="text-xs bg-pawSecondary hover:bg-pawAccent text-pawText font-bold px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+              >
+                ✕ Limpiar búsqueda
+              </button>
+            </div>
+          )}
+
+          {publicacionesFiltradas.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+              {publicacionesFiltradas.map((pub) => (
+                <Card 
+                  key={pub.id}
+                  id={pub.id}
+                  titulo={pub.titulo} 
+                  precio={pub.precio} 
+                  imagen={pub.imagen} 
+                  estrellas={pub.estrellas} 
+                  cantidad={pub.cantidad}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white border border-dashed border-pawSecondary rounded-3xl p-12 text-center flex flex-col items-center justify-center">
+              <span className="text-4xl mb-3">🔍</span>
+              <h4 className="text-xl font-bold text-pawText">No encontramos resultados</h4>
+              <p className="text-sm text-pawText/70 mt-1 max-w-sm">
+                No hay productos o cuidadores que coincidan con tu búsqueda. Intenta con otras palabras o limpia el filtro.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

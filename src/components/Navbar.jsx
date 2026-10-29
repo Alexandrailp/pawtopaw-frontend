@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
@@ -7,45 +7,106 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleFiltrar = (categoria) => {
+  const [busqueda, setBusqueda] = useState('');
+
+  // Sincronizar el input si el parámetro 'buscar' cambia en la URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setBusqueda(params.get('buscar') || '');
+  }, [location.search]);
+
+  const handleBuscar = (e) => {
+    e.preventDefault();
+    const query = busqueda.trim();
+    const params = new URLSearchParams(location.pathname === '/' ? location.search : '');
+
+    if (query) {
+      params.set('buscar', query);
+    } else {
+      params.delete('buscar');
+    }
+
     if (location.pathname === '/') {
       const catalogo = document.getElementById('catalogo');
       if (catalogo) {
         catalogo.scrollIntoView({ behavior: 'smooth' });
       }
-      navigate(`/?categoria=${categoria}`, { replace: true });
+      navigate(`/?${params.toString()}`, { replace: true });
     } else {
-      navigate(`/?categoria=${categoria}`);
+      navigate(`/?${params.toString()}`);
+    }
+  };
+
+  const limpiarBusqueda = () => {
+    setBusqueda('');
+    const params = new URLSearchParams(location.search);
+    params.delete('buscar');
+    if (location.pathname === '/') {
+      navigate(`/?${params.toString()}`, { replace: true });
+    }
+  };
+
+  const handleFiltrar = (categoria) => {
+    const params = new URLSearchParams(location.pathname === '/' ? location.search : '');
+    params.set('categoria', categoria);
+
+    if (location.pathname === '/') {
+      const catalogo = document.getElementById('catalogo');
+      if (catalogo) {
+        catalogo.scrollIntoView({ behavior: 'smooth' });
+      }
+      navigate(`/?${params.toString()}`, { replace: true });
+    } else {
+      navigate(`/?${params.toString()}`);
     }
   };
 
   return (
-    <nav className="bg-white shadow-sm py-4 border-b border-pawSecondary">
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+    <nav className="bg-white shadow-xs py-3.5 border-b border-pawSecondary sticky top-0 z-40">
+      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 text-decoration-none">
-          <span className="text-3xl">🐾</span>
+        <Link to="/" className="flex items-center gap-2 text-decoration-none shrink-0 group">
+          <span className="text-3xl group-hover:scale-110 transition-transform">🐾</span>
           <div>
-            <h1 className="m-0 text-2xl font-bold text-pawText leading-tight">PawtoPaw</h1>
+            <h1 className="m-0 text-2xl font-extrabold text-pawText tracking-tight leading-tight">PawtoPaw</h1>
           </div>
         </Link>
 
-        {/* Búsqueda */}
-        <div className="hidden md:flex flex-1 max-w-xl mx-8">
-          <div className="flex w-full bg-pawSecondary rounded-full overflow-hidden border border-pawPrimary focus-within:ring-1 focus-within:ring-pawPrimary transition-all">
+        {/* Búsqueda moderna integrada con la paleta de PawtoPaw */}
+        <div className="hidden md:flex flex-1 max-w-xl mx-2 lg:mx-6">
+          <form
+            onSubmit={handleBuscar}
+            className="flex w-full items-center bg-pawLight border border-pawSecondary hover:border-pawPrimary/70 focus-within:border-pawPrimary focus-within:ring-2 focus-within:ring-pawPrimary/20 rounded-full pl-4 pr-1.5 py-1.5 shadow-2xs transition-all"
+          >
+            <span className="text-pawPrimary text-base select-none mr-2">🔍</span>
             <input
               type="text"
-              placeholder="Busca productos, alimentos o cuidadores..."
-              className="w-full bg-transparent px-5 py-2 outline-none text-sm text-pawText placeholder-pawPrimary"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar productos, alimentos, cuidadores..."
+              className="w-full bg-transparent outline-none text-sm font-medium text-pawText placeholder-pawText/40"
             />
-            <button className="bg-pawPrimary px-6 text-pawText hover:bg-opacity-80 transition-colors flex items-center justify-center">
-              🔍
+            {busqueda && (
+              <button
+                type="button"
+                onClick={limpiarBusqueda}
+                className="text-pawText/40 hover:text-pawText text-xs px-2 py-1 rounded-full hover:bg-pawSecondary/60 transition-colors mr-1 cursor-pointer"
+                title="Limpiar búsqueda"
+              >
+                ✕
+              </button>
+            )}
+            <button
+              type="submit"
+              className="bg-pawPrimary hover:bg-pawPrimary/90 text-white font-bold text-xs px-4 py-2 rounded-full transition-all shadow-xs shrink-0 cursor-pointer"
+            >
+              Buscar
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Enlaces de Usuario (Solo Íconos) */}
-        <div className="flex items-center gap-6 text-pawText">
+        <div className="flex items-center gap-5 text-pawText shrink-0">
           <button
             type="button"
             onClick={() => handleFiltrar('producto')}
@@ -65,17 +126,23 @@ export default function Navbar() {
             🐕
           </button>
           
-          <div className="flex gap-4 border-l border-pawPrimary pl-4">
+          <div className="flex gap-4 border-l border-pawPrimary/40 pl-4 items-center">
             <Link
               to={user ? "/perfil" : "/login"}
-              className="text-2xl hover:text-pawPrimary transition-colors"
-              title={user ? "Mi Perfil" : "Cuenta"}
+              className="text-2xl hover:text-pawPrimary hover:scale-110 transition-all cursor-pointer"
+              title={user ? "Mi Perfil" : "Iniciar Sesión"}
             >
               👤
             </Link>
-            <Link to="/perfil" className="text-2xl hover:text-pawPrimary transition-colors relative" title="Carrito">
+            <Link 
+              to="/perfil" 
+              className="text-2xl hover:text-pawPrimary hover:scale-110 transition-all relative cursor-pointer" 
+              title="Mi Perfil y Pedidos"
+            >
               🛒
-              <span className="absolute -top-2 -right-2 bg-pawAccent text-pawText text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm">0</span>
+              <span className="absolute -top-1.5 -right-2 bg-pawAccent text-pawText text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-extrabold shadow-xs">
+                0
+              </span>
             </Link>
           </div>
         </div>
