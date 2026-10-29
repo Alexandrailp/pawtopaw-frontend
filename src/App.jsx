@@ -5,6 +5,7 @@ import Login from './views/Login';
 import Registro from './views/Registro';
 import Perfil from './views/Perfil';
 import CrearPublicacion from './views/CrearPublicacion';
+import EditarPublicacion from './views/EditarPublicacion';
 import EditarPerfil from './views/EditarPerfil';
 import DetallePublicacion from './views/DetallePublicacion';
 
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/crear-publicacion" element={<CrearPublicacion />} />
+        <Route path="/editar-publicacion/:id" element={<EditarPublicacion />} />
         <Route path="/editar-perfil" element={<EditarPerfil />} />
         <Route path="/publicacion/:id" element={<DetallePublicacion />} />
       </Routes>

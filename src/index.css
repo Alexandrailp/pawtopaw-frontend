@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --color-pawPrimary: #D2B48C;   
   --color-pawSecondary: #F5E6D3; 
   --color-pawAccent: #FFDAB9;    
@@ -9,6 +10,7 @@
 }
 
 body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-pawLight);
   color: var(--color-pawText);
 }

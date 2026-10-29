@@ -1,6 +1,9 @@
+import { useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { UserContext } from '../context/UserContext';
 
 export default function Navbar() {
+  const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,7 +66,13 @@ export default function Navbar() {
           </button>
           
           <div className="flex gap-4 border-l border-pawPrimary pl-4">
-            <Link to="/login" className="text-2xl hover:text-pawPrimary transition-colors" title="Cuenta">👤</Link>
+            <Link
+              to={user ? "/perfil" : "/login"}
+              className="text-2xl hover:text-pawPrimary transition-colors"
+              title={user ? "Mi Perfil" : "Cuenta"}
+            >
+              👤
+            </Link>
             <Link to="/perfil" className="text-2xl hover:text-pawPrimary transition-colors relative" title="Carrito">
               🛒
               <span className="absolute -top-2 -right-2 bg-pawAccent text-pawText text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm">0</span>

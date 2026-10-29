@@ -1,4 +1,6 @@
+import { useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { UserContext } from '../context/UserContext';
 
 const publicaciones = [
   { id: 1, categoria: 'petsitter', titulo: 'Paseo de Perros 1 hr', precio: 5000, imagen: 'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?w=800', estrellas: 5, cantidad: 42, vendedor: 'Martín Soto', descripcion: 'Paseos seguros, entretenidos y personalizados por parques de la zona. Incluye hidratación, reporte con fotos en tiempo real y mucha dedicación para que tu perro gaste energía de forma saludable.' },
@@ -11,7 +13,19 @@ const publicaciones = [
 
 export default function DetallePublicacion() {
   const { id } = useParams();
-  const publicacion = publicaciones.find((p) => p.id === Number(id)) || publicaciones[0];
+  const { publicaciones: publicacionesBackend, toggleFavorito, esFavorito } = useContext(UserContext);
+
+  const listaCompleta = (publicacionesBackend && publicacionesBackend.length > 0)
+    ? publicacionesBackend
+    : publicaciones;
+
+  const publicacion =
+    listaCompleta.find((p) => p.id === Number(id)) ||
+    publicaciones.find((p) => p.id === Number(id)) ||
+    listaCompleta[0] ||
+    publicaciones[0];
+
+  const estaEnFavoritos = esFavorito ? esFavorito(publicacion.id) : false;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
@@ -43,21 +57,21 @@ export default function DetallePublicacion() {
 
             <div className="flex items-center gap-2 mt-3">
               <span className="text-pawPrimary text-lg tracking-widest">
-                {'★'.repeat(publicacion.estrellas)}{'☆'.repeat(5 - publicacion.estrellas)}
+                {'★'.repeat(publicacion.estrellas || 5)}{'☆'.repeat(5 - (publicacion.estrellas || 5))}
               </span>
               <span className="text-sm text-pawText/70 font-semibold">
-                ({publicacion.cantidad} valoraciones)
+                ({publicacion.cantidad || 1} valoraciones)
               </span>
             </div>
 
             <p className="text-3xl font-extrabold text-pawText mt-6">
-              ${publicacion.precio.toLocaleString('es-CL')}
+              ${(publicacion.precio || 0).toLocaleString('es-CL')}
             </p>
 
             <div className="border-t border-pawSecondary my-6 pt-6">
               <h3 className="font-bold text-pawText text-base mb-2">Descripción</h3>
               <p className="text-pawText/80 text-sm leading-relaxed">
-                {publicacion.descripcion}
+                {publicacion.descripcion || 'Publicación oficial en PawtoPaw.'}
               </p>
             </div>
 
@@ -67,7 +81,7 @@ export default function DetallePublicacion() {
               </div>
               <div>
                 <p className="text-xs text-pawText/60 font-medium">Publicado por</p>
-                <p className="text-sm font-bold text-pawText">{publicacion.vendedor}</p>
+                <p className="text-sm font-bold text-pawText">{publicacion.vendedor || 'Comunidad PawtoPaw'}</p>
               </div>
             </div>
           </div>
@@ -80,8 +94,13 @@ export default function DetallePublicacion() {
               {publicacion.categoria === 'petsitter' ? 'Contratar servicio' : 'Agregar al carrito'}
             </button>
             <button
-              onClick={() => alert('Guardado en tus favoritos')}
-              className="px-6 py-4 bg-pawSecondary text-pawText font-bold rounded-full hover:bg-pawAccent transition-colors cursor-pointer"
+              onClick={() => toggleFavorito && toggleFavorito(publicacion)}
+              className={`px-6 py-4 font-bold rounded-full transition-all cursor-pointer flex items-center justify-center text-lg ${
+                estaEnFavoritos
+                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
+                  : 'bg-pawSecondary text-pawText hover:bg-pawAccent'
+              }`}
+              title={estaEnFavoritos ? 'Quitar de favoritos' : 'Guardar en favoritos'}
             >
               ♥
             </button>

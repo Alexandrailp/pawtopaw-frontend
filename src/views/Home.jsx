@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Card from '../components/Card';
+import { UserContext } from '../context/UserContext';
 
 const heroSlides = [
   {
@@ -42,6 +43,7 @@ export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [orden, setOrden] = useState('');
+  const { publicaciones: publicacionesBackend } = useContext(UserContext);
 
   const filtroCategoria = searchParams.get('categoria') || 'todos';
 
@@ -86,13 +88,17 @@ export default function Home() {
     }
   };
 
-  const publicacionesFiltradas = publicaciones
+  const listaPublicaciones = (publicacionesBackend && publicacionesBackend.length > 0)
+    ? publicacionesBackend
+    : publicaciones;
+
+  const publicacionesFiltradas = listaPublicaciones
     .filter((pub) => (filtroCategoria === 'todos' ? true : pub.categoria === filtroCategoria))
     .sort((a, b) => {
       if (orden === 'mayor-menor') return b.precio - a.precio;
       if (orden === 'menor-mayor') return a.precio - b.precio;
-      if (orden === 'mas-comprados') return b.comprados - a.comprados;
-      if (orden === 'mas-recomendados') return b.estrellas - a.estrellas || b.cantidad - a.cantidad;
+      if (orden === 'mas-comprados') return (b.comprados || 0) - (a.comprados || 0);
+      if (orden === 'mas-recomendados') return (b.estrellas || 5) - (a.estrellas || 5) || (b.cantidad || 0) - (a.cantidad || 0);
       return 0;
     });
 
