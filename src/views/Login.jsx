@@ -2,62 +2,85 @@ import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
-export default function Login() {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useContext(UserContext);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return alert('Completa todos los campos');
+    setError('');
+    
+    if (!email || !password) {
+      setError('Por favor completa todos los campos.');
+      return;
+    }
 
-    setUser({ email });
-    navigate('/perfil');
+    try {
+      setLoading(true);
+      await login(email, password);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Credenciales inválidas. Inténtalo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div 
-      className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 py-12 bg-repeat bg-[size:350px]"
-      style={{ backgroundImage: "url('/bg-doodles.jpg')" }}
-    >
-      <div className="w-full max-w-md bg-white border border-pawSecondary rounded-3xl p-8 md:p-10 shadow-lg flex flex-col items-center">
-        <h2 className="text-3xl font-extrabold text-pawText mb-8 text-center">
-          Iniciar Sesión
-        </h2>
+    <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-xl shadow-md border border-gray-100">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Iniciar Sesión en PawtoPaw</h2>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
           <input
             type="email"
-            placeholder="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-pawLight border border-pawPrimary rounded-full px-6 py-3.5 text-center text-pawText placeholder-pawText/60 outline-none focus:ring-2 focus:ring-pawAccent transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            placeholder="tucorreo@ejemplo.com"
           />
+        </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
           <input
             type="password"
-            placeholder="contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-pawLight border border-pawPrimary rounded-full px-6 py-3.5 text-center text-pawText placeholder-pawText/60 outline-none focus:ring-2 focus:ring-pawAccent transition-all"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            placeholder="••••••••"
           />
+        </div>
 
-          <button
-            type="submit"
-            className="w-full bg-pawPrimary text-white font-bold py-3.5 rounded-full hover:opacity-90 transition-opacity shadow-sm mt-2 cursor-pointer"
-          >
-            Ingresar
-          </button>
-        </form>
-
-        <Link
-          to="/registro"
-          className="w-full mt-4 bg-pawAccent text-pawText text-sm py-3.5 rounded-full hover:bg-pawSecondary transition-colors text-center shadow-xs"
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
         >
-          ¿No tienes cuenta? <span className="font-bold">Regístrate aquí</span>
+          {loading ? 'Iniciando sesión...' : 'Ingresar'}
+        </button>
+      </form>
+
+      <p className="mt-4 text-center text-sm text-gray-600">
+        ¿No tienes cuenta?{' '}
+        <Link to="/registro" className="text-emerald-600 font-medium hover:underline">
+          Regístrate aquí
         </Link>
-      </div>
+      </p>
     </div>
   );
-}
+};
+
+export default Login;
