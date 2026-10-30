@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
@@ -26,6 +26,10 @@ export default function DetallePublicacion() {
     publicaciones[0];
 
   const estaEnFavoritos = esFavorito ? esFavorito(publicacion.id) : false;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">

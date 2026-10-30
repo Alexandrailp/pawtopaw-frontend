@@ -1,11 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Card from '../components/Card';
 import { UserContext } from '../context/UserContext';
 
 const heroSlides = [
   {
     id: 1,
+    publicacionId: 3,
     tipo: 'Producto Destacado',
     titulo: 'Alimento Premium para tu mascota',
     imagen: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=1200&q=80',
@@ -14,6 +15,7 @@ const heroSlides = [
   },
   {
     id: 2,
+    publicacionId: 4,
     tipo: 'Petsitter Estrella',
     titulo: 'Paseos y cuidado experto de confianza',
     imagen: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=1200&q=80',
@@ -22,6 +24,7 @@ const heroSlides = [
   },
   {
     id: 3,
+    publicacionId: 2,
     tipo: 'Nuevo Accesorio',
     titulo: 'Camas ultra suaves para un descanso perfecto',
     imagen: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=1200&q=80',
@@ -111,6 +114,33 @@ export default function Home() {
       return 0;
     });
 
+  const obtenerIdPublicacion = (slide) => {
+    // 1. Buscar coincidencia exacta por ID en las publicaciones activas
+    const encontradaPorId = listaPublicaciones.find((p) => Number(p.id) === Number(slide.publicacionId));
+    if (encontradaPorId) return encontradaPorId.id;
+
+    // 2. Si no coincide por ID directo, buscar por título o categoría
+    if (slide.publicacionId === 3) {
+      const porTitulo = listaPublicaciones.find((p) => p.titulo?.toLowerCase().includes('alimento'));
+      if (porTitulo) return porTitulo.id;
+    }
+    if (slide.publicacionId === 4) {
+      const porTitulo = listaPublicaciones.find(
+        (p) => p.categoria === 'petsitter' || p.titulo?.toLowerCase().includes('cuidado') || p.titulo?.toLowerCase().includes('paseo')
+      );
+      if (porTitulo) return porTitulo.id;
+    }
+    if (slide.publicacionId === 2) {
+      const porTitulo = listaPublicaciones.find(
+        (p) => p.titulo?.toLowerCase().includes('casa') || p.titulo?.toLowerCase().includes('cama')
+      );
+      if (porTitulo) return porTitulo.id;
+    }
+
+    // 3. Fallback al publicacionId o al primer artículo existente
+    return slide.publicacionId || (listaPublicaciones[0]?.id || 1);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 pb-16">
       <div className="relative w-full mt-6 rounded-3xl overflow-hidden shadow-sm h-[400px] md:h-[500px] group">
@@ -132,9 +162,12 @@ export default function Home() {
                 <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight drop-shadow-lg max-w-2xl">
                   {slide.titulo}
                 </h2>
-                <button className="mt-8 bg-pawLight text-pawText font-bold py-3 px-8 rounded-full w-max hover:bg-pawSecondary hover:scale-105 transition-all shadow-md cursor-pointer">
+                <Link
+                  to={`/publicacion/${obtenerIdPublicacion(slide)}`}
+                  className="mt-8 bg-pawLight text-pawText font-bold py-3 px-8 rounded-full w-max hover:bg-pawSecondary hover:scale-105 transition-all shadow-md cursor-pointer inline-flex items-center justify-center text-decoration-none"
+                >
                   Ver detalles
-                </button>
+                </Link>
               </div>
             </div>
           ))}
