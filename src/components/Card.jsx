@@ -32,8 +32,8 @@ export default function Card({ id, titulo, precio, imagen, estrellas, cantidad, 
               ${(precio || 0).toLocaleString('es-CL')}
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-pawPrimary text-sm tracking-widest">
-                {'★'.repeat(estrellas || 5)}{'☆'.repeat(5 - (estrellas || 5))}
+              <span className="text-amber-400 text-sm tracking-wider">
+                {'★'.repeat(Math.min(5, Math.max(1, estrellas || 5)))}{'☆'.repeat(5 - Math.min(5, Math.max(1, estrellas || 5)))}
               </span>
               <span className="text-xs text-pawText/70 font-semibold">({cantidad || 1})</span>
             </div>

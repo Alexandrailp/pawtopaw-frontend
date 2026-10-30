@@ -13,6 +13,29 @@ const descripcionesIniciales = {
   6: 'Espacio tranquilo, seguro y enriquecido con rascadores y zonas altas para el cuidado diurno de gatitos. Atención personalizada y ambiente libre de estrés.'
 };
 
+const resenasBase = {
+  1: [
+    { id: 'b1', calificacion: 5, comentario: '¡Increíble servicio! Mi perrito Lucas volvió súper feliz y relajado. Muy recomendado.', autor: 'Sofía Martínez', fecha: '28 Oct, 2026' },
+    { id: 'b2', calificacion: 5, comentario: 'Puntual y muy cariñoso con las mascotas. Me envió fotos y videos durante todo el paseo.', autor: 'Rodrigo Vera', fecha: '24 Oct, 2026' }
+  ],
+  2: [
+    { id: 'b3', calificacion: 5, comentario: 'Excelente calidad y acabados. Mi gata se adaptó de inmediato y duerme todas sus siestas ahí.', autor: 'Daniela Soto', fecha: '26 Oct, 2026' },
+    { id: 'b4', calificacion: 4, comentario: 'Muy linda y calientita. El tamaño es perfecto para departamentos.', autor: 'Felipe A.', fecha: '20 Oct, 2026' }
+  ],
+  3: [
+    { id: 'b5', calificacion: 5, comentario: 'El pelaje de mi perro cambió un 100%, súper brillante y con excelente digestión.', autor: 'Claudia Morales', fecha: '27 Oct, 2026' }
+  ],
+  4: [
+    { id: 'b6', calificacion: 5, comentario: 'Pude viajar con total tranquilidad sabiendo que estaban al cuidado de mis gatitos. Excelente comunicación.', autor: 'Ignacio R.', fecha: '25 Oct, 2026' }
+  ],
+  5: [
+    { id: 'b7', calificacion: 4, comentario: 'Cuerda muy resistente, perfecta para perros con mucha fuerza.', autor: 'Camila J.', fecha: '22 Oct, 2026' }
+  ],
+  6: [
+    { id: 'b8', calificacion: 5, comentario: 'Espacio higiénico y muy enriquecido para gatos. Gran dedicación y cariño.', autor: 'Patricia B.', fecha: '29 Oct, 2026' }
+  ]
+};
+
 const corregirTexto = (texto) => {
   if (!texto || typeof texto !== 'string') return '';
   return texto
@@ -274,29 +297,167 @@ export default function UserProvider({ children }) {
       if (!response.ok) throw new Error('Error al cargar artículos');
       const data = await response.json();
       
-      const articulosFormateados = data.map((art) => ({
-        id: art.id,
-        categoria: art.tipo_id === 2 ? 'petsitter' : 'producto',
-        titulo: corregirTexto(art.titulo),
-        precio: Number(art.precio),
-        imagen: art.imagen,
-        usuario_id: art.usuario_id,
-        usuario_email: art.usuario_email,
-        estrellas: 5,
-        cantidad: 15,
-        comprados: 20,
-        vendedor: art.vendedor || (art.usuario_id === 1 ? 'Camila Rojas' : 'Comunidad PawtoPaw'),
-        descripcion:
-          corregirTexto(art.descripcion) ||
-          descripcionesIniciales[art.id] ||
-          'Publicación oficial en PawtoPaw. Calidad y confianza garantizada para tu mascota.'
-      }));
+      const articulosFormateados = data.map((art) => {
+        let resenasLocales = [];
+        try {
+          resenasLocales = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${art.id}`) || '[]');
+        } catch {
+          resenasLocales = [];
+        }
+
+        const baseArt = resenasBase[art.id] || [];
+        const todasResenas = [...resenasLocales, ...baseArt];
+
+        let estrellas = Number(art.estrellas) || 5;
+        let cantidad = Number(art.cantidad_resenas) || 0;
+
+        if (todasResenas.length > 0) {
+          const suma = todasResenas.reduce((acc, r) => acc + (Number(r.calificacion) || 5), 0);
+          estrellas = Math.round(suma / todasResenas.length);
+          cantidad = Math.max(cantidad, todasResenas.length);
+        }
+
+        return {
+          id: art.id,
+          categoria: art.tipo_id === 2 ? 'petsitter' : 'producto',
+          titulo: corregirTexto(art.titulo),
+          precio: Number(art.precio),
+          imagen: art.imagen,
+          usuario_id: art.usuario_id,
+          usuario_email: art.usuario_email,
+          estrellas: Math.min(5, Math.max(1, estrellas)),
+          cantidad: cantidad || 1,
+          comprados: 20,
+          vendedor: art.vendedor || (art.usuario_id === 1 ? 'Camila Rojas' : 'Comunidad PawtoPaw'),
+          descripcion:
+            corregirTexto(art.descripcion) ||
+            descripcionesIniciales[art.id] ||
+            'Publicación oficial en PawtoPaw. Calidad y confianza garantizada para tu mascota.'
+        };
+      });
 
       setPublicaciones(articulosFormateados);
       return articulosFormateados;
     } catch (error) {
       console.error('Error al obtener artículos:', error);
     }
+  };
+
+  const obtenerResenasArticulo = async (articulo_id) => {
+    const idNum = Number(articulo_id);
+    let resenasLocales = [];
+    try {
+      resenasLocales = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
+    } catch {
+      resenasLocales = [];
+    }
+
+    const baseArt = resenasBase[idNum] || [];
+
+    let resenasBackend = [];
+    try {
+      const res = await fetch(`${API_URL}/articulos/${idNum}/resenas`);
+      if (res.ok) {
+        const data = await res.json();
+        resenasBackend = data.map((r) => ({
+          id: `backend_${r.id}`,
+          calificacion: Number(r.calificacion),
+          comentario: r.comentario,
+          autor: r.autor || (r.autor_email ? r.autor_email.split('@')[0] : 'Cliente PawtoPaw'),
+          autor_email: r.autor_email,
+          fecha: 'Reciente'
+        }));
+      }
+    } catch (e) {
+      console.warn('No se pudieron obtener reseñas del backend:', e);
+    }
+
+    const mapa = new Map();
+    [...resenasLocales, ...resenasBackend, ...baseArt].forEach((r) => {
+      const clave = `${r.calificacion}_${r.comentario}_${r.autor}`;
+      if (!mapa.has(clave)) {
+        mapa.set(clave, r);
+      }
+    });
+
+    return Array.from(mapa.values());
+  };
+
+  const calificarArticulo = async ({ articulo_id, calificacion, comentario, nombreAutor }) => {
+    const idNum = Number(articulo_id);
+    const califNum = Math.min(5, Math.max(1, Number(calificacion)));
+    const textoComentario = (comentario || '').trim();
+
+    if (!textoComentario) {
+      throw new Error('Por favor escribe un comentario para tu valoración.');
+    }
+
+    const autorNombre =
+      user?.nombre ||
+      nombreAutor ||
+      (user?.email ? user.email.split('@')[0] : 'Cliente PawtoPaw');
+
+    const nuevaResena = {
+      id: Date.now(),
+      articulo_id: idNum,
+      calificacion: califNum,
+      comentario: textoComentario,
+      autor: autorNombre,
+      autor_email: user?.email || '',
+      fecha: new Date().toLocaleDateString('es-CL', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })
+    };
+
+    let guardadas = [];
+    try {
+      guardadas = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
+    } catch {
+      guardadas = [];
+    }
+    const actualizadas = [nuevaResena, ...guardadas];
+    localStorage.setItem(`pawtopaw_resenas_${idNum}`, JSON.stringify(actualizadas));
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      await fetch(`${API_URL}/resenas`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          comentario: textoComentario,
+          calificacion: califNum,
+          usuario_id: user?.id || 1,
+          articulo_id: idNum
+        })
+      });
+    } catch (e) {
+      console.warn('Backend resenas warning:', e);
+    }
+
+    setPublicaciones((prev) =>
+      prev.map((p) => {
+        if (Number(p.id) === idNum) {
+          const totalActual = Number(p.cantidad) || 0;
+          const estrellasActuales = Number(p.estrellas) || 5;
+          const nuevoTotal = totalActual + 1;
+          const nuevoPromedio = Math.round(
+            (estrellasActuales * totalActual + califNum) / nuevoTotal
+          );
+          return {
+            ...p,
+            estrellas: Math.min(5, Math.max(1, nuevoPromedio)),
+            cantidad: nuevoTotal
+          };
+        }
+        return p;
+      })
+    );
+
+    return nuevaResena;
   };
 
   const agregarPublicacionMemoria = (nueva) => {
@@ -455,7 +616,9 @@ export default function UserProvider({ children }) {
         vaciarCarrito,
         cantidadTotalCarrito,
         totalCarrito,
-        finalizarCompra
+        finalizarCompra,
+        obtenerResenasArticulo,
+        calificarArticulo
       }}
     >
       {children}
