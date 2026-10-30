@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
 export default function Navbar() {
-  const { user } = useContext(UserContext);
+  const { user, cantidadTotalCarrito } = useContext(UserContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -135,13 +135,13 @@ export default function Navbar() {
               👤
             </Link>
             <Link 
-              to="/perfil" 
+              to="/carrito" 
               className="text-2xl hover:text-pawPrimary hover:scale-110 transition-all relative cursor-pointer" 
-              title="Mi Perfil y Pedidos"
+              title="Mi Carrito de Compras"
             >
               🛒
               <span className="absolute -top-1.5 -right-2 bg-pawAccent text-pawText text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-extrabold shadow-xs">
-                0
+                {cantidadTotalCarrito || 0}
               </span>
             </Link>
           </div>

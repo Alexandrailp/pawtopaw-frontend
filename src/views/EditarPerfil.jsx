@@ -6,12 +6,10 @@ export default function EditarPerfil() {
   const { user, setUser } = useContext(UserContext);
   const navigate = useNavigate();
 
-  const [nombre, setNombre] = useState(user?.nombre || 'Camila Rojas');
-  const [email, setEmail] = useState(user?.email || 'camila@pawtopaw.cl');
-  const [telefono, setTelefono] = useState(user?.telefono || '+56 9 1234 5678');
-  const [avatar, setAvatar] = useState(
-    user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300'
-  );
+  const [nombre, setNombre] = useState(user?.nombre || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [telefono, setTelefono] = useState(user?.telefono || '');
+  const [avatar, setAvatar] = useState(user?.avatar || '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -31,8 +29,14 @@ export default function EditarPerfil() {
           Editar Perfil
         </h2>
 
-        <div className="w-24 h-24 rounded-full bg-pawSecondary border-4 border-pawAccent overflow-hidden mb-6 shadow-xs">
-          <img src={avatar} alt="Vista previa" className="w-full h-full object-cover" />
+        <div className="w-24 h-24 rounded-full bg-pawSecondary border-4 border-pawAccent overflow-hidden mb-6 shadow-xs flex items-center justify-center">
+          {avatar ? (
+            <img src={avatar} alt="Vista previa" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-3xl font-extrabold text-pawText uppercase">
+              {(nombre || email || 'P')[0]}
+            </span>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">

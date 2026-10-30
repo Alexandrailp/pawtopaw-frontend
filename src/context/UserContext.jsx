@@ -48,19 +48,183 @@ export default function UserProvider({ children }) {
   };
 
   const [favoritos, setFavoritos] = useState(() => {
-    const key = user?.id 
-      ? `pawtopaw_favs_${user.id}` 
-      : (user?.email ? `pawtopaw_favs_${user.email}` : 'pawtopaw_favs_guest');
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const key = user?.id 
+        ? `pawtopaw_favs_${user.id}` 
+        : (user?.email ? `pawtopaw_favs_${user.email}` : 'pawtopaw_favs_guest');
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
-  // Mantener favoritos sincronizados si cambia el usuario
+  // Clave del carrito para el usuario actual
+  const getCartKey = (currentUser = user) => {
+    return currentUser?.id
+      ? `pawtopaw_cart_${currentUser.id}`
+      : (currentUser?.email ? `pawtopaw_cart_${currentUser.email}` : 'pawtopaw_cart_guest');
+  };
+
+  const [carrito, setCarrito] = useState(() => {
+    try {
+      const key = user?.id
+        ? `pawtopaw_cart_${user.id}`
+        : (user?.email ? `pawtopaw_cart_${user.email}` : 'pawtopaw_cart_guest');
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Mantener favoritos y carrito sincronizados si cambia el usuario
   useEffect(() => {
-    const key = getFavKey(user);
-    const saved = localStorage.getItem(key);
-    setFavoritos(saved ? JSON.parse(saved) : []);
+    try {
+      const favKey = getFavKey(user);
+      const savedFavs = localStorage.getItem(favKey);
+      setFavoritos(savedFavs ? JSON.parse(savedFavs) : []);
+
+      const cartKey = getCartKey(user);
+      const savedCart = localStorage.getItem(cartKey);
+      setCarrito(savedCart ? JSON.parse(savedCart) : []);
+    } catch {
+      setFavoritos([]);
+      setCarrito([]);
+    }
   }, [user]);
+
+  const agregarAlCarrito = (producto, cantidad = 1) => {
+    const cartKey = getCartKey(user);
+    const idNum = Number(producto.id);
+    let nuevoCarrito;
+
+    const existe = carrito.find((item) => Number(item.id) === idNum);
+    if (existe) {
+      nuevoCarrito = carrito.map((item) =>
+        Number(item.id) === idNum
+          ? { ...item, cantidad: item.cantidad + cantidad }
+          : item
+      );
+    } else {
+      nuevoCarrito = [
+        ...carrito,
+        {
+          id: idNum,
+          titulo: producto.titulo,
+          precio: Number(producto.precio) || 0,
+          imagen: producto.imagen,
+          categoria: producto.categoria || 'producto',
+          cantidad: cantidad
+        }
+      ];
+    }
+
+    setCarrito(nuevoCarrito);
+    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+    return nuevoCarrito;
+  };
+
+  const eliminarDelCarrito = (id) => {
+    const cartKey = getCartKey(user);
+    const idNum = Number(id);
+    const nuevoCarrito = carrito.filter((item) => Number(item.id) !== idNum);
+    setCarrito(nuevoCarrito);
+    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+  };
+
+  const actualizarCantidadCarrito = (id, delta) => {
+    const cartKey = getCartKey(user);
+    const idNum = Number(id);
+    let nuevoCarrito = carrito
+      .map((item) => {
+        if (Number(item.id) === idNum) {
+          const nuevaCantidad = item.cantidad + delta;
+          return { ...item, cantidad: nuevaCantidad };
+        }
+        return item;
+      })
+      .filter((item) => item.cantidad > 0);
+
+    setCarrito(nuevoCarrito);
+    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+  };
+
+  const vaciarCarrito = () => {
+    const cartKey = getCartKey(user);
+    setCarrito([]);
+    localStorage.setItem(cartKey, JSON.stringify([]));
+  };
+
+  const cantidadTotalCarrito = carrito.reduce(
+    (acc, item) => acc + (Number(item.cantidad) || 1),
+    0
+  );
+
+  const totalCarrito = carrito.reduce(
+    (acc, item) => acc + (Number(item.precio) || 0) * (Number(item.cantidad) || 1),
+    0
+  );
+
+  const finalizarCompra = async () => {
+    if (carrito.length === 0) return false;
+
+    // Crear pedidos para el usuario actual
+    const pedidosKey = user?.id
+      ? `pawtopaw_pedidos_${user.id}`
+      : (user?.email ? `pawtopaw_pedidos_${user.email}` : 'pawtopaw_pedidos_guest');
+
+    let pedidosPrevios = [];
+    try {
+      pedidosPrevios = JSON.parse(localStorage.getItem(pedidosKey) || '[]');
+    } catch {
+      pedidosPrevios = [];
+    }
+
+    const fechaHoy = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    const nuevosPedidos = carrito.map((item, index) => ({
+      id: Date.now() + index,
+      articulo_id: item.id,
+      titulo: item.titulo,
+      precio: item.precio * item.cantidad,
+      cantidad: item.cantidad,
+      imagen: item.imagen,
+      fecha: fechaHoy,
+      estado: 'En preparación'
+    }));
+
+    const todosLosPedidos = [...nuevosPedidos, ...pedidosPrevios];
+    localStorage.setItem(pedidosKey, JSON.stringify(todosLosPedidos));
+
+    // Si hay token y usuario, intentar registrar en backend
+    if (token && user?.id) {
+      for (const item of carrito) {
+        try {
+          await fetch(`${API_URL}/compras`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              usuario_id: user.id,
+              articulo_id: item.id
+            })
+          });
+        } catch (e) {
+          console.warn('Backend compras warning:', e);
+        }
+      }
+    }
+
+    vaciarCarrito();
+    return true;
+  };
 
   const esFavorito = (id) => {
     return favoritos.some((item) => Number(item.id) === Number(id));
@@ -266,7 +430,15 @@ export default function UserProvider({ children }) {
         toggleFavorito,
         esFavorito,
         eliminarPublicacion,
-        actualizarPublicacion
+        actualizarPublicacion,
+        carrito,
+        agregarAlCarrito,
+        eliminarDelCarrito,
+        actualizarCantidadCarrito,
+        vaciarCarrito,
+        cantidadTotalCarrito,
+        totalCarrito,
+        finalizarCompra
       }}
     >
       {children}

@@ -8,6 +8,7 @@ import CrearPublicacion from './views/CrearPublicacion';
 import EditarPublicacion from './views/EditarPublicacion';
 import EditarPerfil from './views/EditarPerfil';
 import DetallePublicacion from './views/DetallePublicacion';
+import Carrito from './views/Carrito';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/carrito" element={<Carrito />} />
         <Route path="/crear-publicacion" element={<CrearPublicacion />} />
         <Route path="/editar-publicacion/:id" element={<EditarPublicacion />} />
         <Route path="/editar-perfil" element={<EditarPerfil />} />

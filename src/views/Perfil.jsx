@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 import Card from '../components/Card';
@@ -7,8 +7,14 @@ export default function Perfil() {
   const { user, setUser, publicaciones, eliminarPublicacion, favoritos, toggleFavorito } = useContext(UserContext);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   const nombreMostrado =
-    user?.nombre || (user?.email ? user.email.split('@')[0] : 'Usuario PawtoPaw');
+    user?.nombre || (user?.email ? user.email.split('@')[0] : 'Usuario');
 
   const handleLogout = () => {
     setUser(null);
@@ -42,7 +48,7 @@ export default function Perfil() {
   const publicacionesDelUsuario = user
     ? publicaciones.filter(
         (p) =>
-          (p.usuario_id && user.id && p.usuario_id === user.id) ||
+          (p.usuario_id && user.id && Number(p.usuario_id) === Number(user.id)) ||
           misArticulosIds.includes(p.id)
       )
     : [];
@@ -54,11 +60,17 @@ export default function Perfil() {
       <div className="flex flex-col md:flex-row gap-8 items-start">
         <aside className="w-full md:w-80 shrink-0 bg-white border border-pawSecondary rounded-3xl p-8 shadow-sm flex flex-col items-center text-center">
           <div className="w-32 h-32 rounded-full bg-pawSecondary border-4 border-pawAccent flex items-center justify-center mb-4 shadow-xs overflow-hidden">
-            <img
-              src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300'}
-              alt="Foto de perfil"
-              className="w-full h-full object-cover"
-            />
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Foto de perfil"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-4xl font-extrabold text-pawText uppercase">
+                {(nombreMostrado || 'P')[0]}
+              </span>
+            )}
           </div>
 
           <div className="w-full bg-pawLight border border-pawPrimary/50 rounded-full py-2.5 px-4 mb-2">

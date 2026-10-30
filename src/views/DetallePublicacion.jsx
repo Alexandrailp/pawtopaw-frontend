@@ -13,7 +13,12 @@ const publicaciones = [
 
 export default function DetallePublicacion() {
   const { id } = useParams();
-  const { publicaciones: publicacionesBackend, toggleFavorito, esFavorito } = useContext(UserContext);
+  const {
+    publicaciones: publicacionesBackend,
+    toggleFavorito,
+    esFavorito,
+    agregarAlCarrito
+  } = useContext(UserContext);
 
   const listaCompleta = (publicacionesBackend && publicacionesBackend.length > 0)
     ? publicacionesBackend
@@ -92,7 +97,12 @@ export default function DetallePublicacion() {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-2">
             <button
-              onClick={() => alert('Agregado al carrito')}
+              onClick={() => {
+                if (agregarAlCarrito) {
+                  agregarAlCarrito(publicacion);
+                  alert(`¡"${publicacion.titulo}" agregado al carrito de compras! 🛒`);
+                }
+              }}
               className="flex-1 bg-pawPrimary text-white font-bold py-4 rounded-full hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
             >
               {publicacion.categoria === 'petsitter' ? 'Contratar servicio' : 'Agregar al carrito'}
