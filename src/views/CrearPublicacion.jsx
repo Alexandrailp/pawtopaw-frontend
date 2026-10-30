@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
@@ -11,8 +11,15 @@ export default function CrearPublicacion() {
   const [imagen, setImagen] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, token, obtenerArticulos } = useContext(UserContext);
+  const { user, token, obtenerArticulos, agregarPublicacionMemoria } = useContext(UserContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user && !token) {
+      alert('Debes iniciar sesión para publicar un producto o servicio.');
+      navigate('/login');
+    }
+  }, [user, token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,6 +30,17 @@ export default function CrearPublicacion() {
     try {
       setLoading(true);
       const tipo_id = categoria === 'petsitter' ? 2 : 1;
+
+      // Extraer id de usuario seguro
+      let idUsuario = user?.id;
+      if (!idUsuario && token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          idUsuario = payload.id;
+        } catch {}
+      }
+      idUsuario = idUsuario || 1;
+
       const response = await fetch(`${API_URL}/articulos`, {
         method: 'POST',
         headers: {
@@ -34,7 +52,7 @@ export default function CrearPublicacion() {
           precio: Number(precio),
           imagen,
           tipo_id,
-          usuario_id: user?.id || 1,
+          usuario_id: idUsuario,
           descripcion
         })
       });
@@ -44,19 +62,47 @@ export default function CrearPublicacion() {
         throw new Error(data.message || 'Error al crear la publicación');
       }
 
-      if (data.articulo_id) {
-        const userKey = user?.id 
-          ? `pawtopaw_articulos_usuario_${user.id}` 
-          : (user?.email ? `pawtopaw_articulos_usuario_${user.email}` : 'pawtopaw_mis_articulos');
-        const guardados = JSON.parse(localStorage.getItem(userKey) || '[]');
-        if (!guardados.includes(data.articulo_id)) {
-          localStorage.setItem(userKey, JSON.stringify([data.articulo_id, ...guardados]));
-        }
+      const nuevoId = data.articulo_id || Date.now();
+
+      // Guardar en almacenamiento local del usuario
+      const claves = [
+        `pawtopaw_articulos_usuario_${idUsuario}`,
+        user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null,
+        'pawtopaw_mis_articulos'
+      ].filter(Boolean);
+
+      claves.forEach((key) => {
+        try {
+          const guardados = JSON.parse(localStorage.getItem(key) || '[]');
+          if (!guardados.includes(nuevoId)) {
+            localStorage.setItem(key, JSON.stringify([nuevoId, ...guardados]));
+          }
+        } catch {}
+      });
+
+      // Crear objeto formateado para actualizar estado en memoria de inmediato
+      const nuevoArticulo = {
+        id: nuevoId,
+        categoria,
+        titulo,
+        precio: Number(precio),
+        imagen,
+        usuario_id: idUsuario,
+        usuario_email: user?.email,
+        vendedor: user?.nombre || user?.email || 'Tú',
+        descripcion,
+        estrellas: 5,
+        cantidad: 1,
+        comprados: 0
+      };
+
+      if (agregarPublicacionMemoria) {
+        agregarPublicacionMemoria(nuevoArticulo);
       }
 
-      alert('¡Publicación creada con éxito!');
+      alert('¡Publicación creada con éxito y asociada a tu cuenta!');
       if (obtenerArticulos) {
-        await obtenerArticulos();
+        obtenerArticulos().catch(() => {});
       }
       navigate('/perfil');
     } catch (err) {

@@ -284,6 +284,7 @@ export default function Home() {
                   imagen={pub.imagen} 
                   estrellas={pub.estrellas} 
                   cantidad={pub.cantidad}
+                  categoria={pub.categoria}
                 />
               ))}
             </div>

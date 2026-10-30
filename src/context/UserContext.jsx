@@ -28,14 +28,42 @@ const corregirTexto = (texto) => {
     .replace(/Â/g, '');
 };
 
-export default function UserProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('pawtopaw_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+const extraerIdDeToken = (tokenStr) => {
+  try {
+    if (!tokenStr || typeof tokenStr !== 'string') return null;
+    const base64Url = tokenStr.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload).id || null;
+  } catch {
+    return null;
+  }
+};
 
+export default function UserProvider({ children }) {
   const [token, setToken] = useState(() => {
     return localStorage.getItem('pawtopaw_token') || null;
+  });
+
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pawtopaw_user');
+      const savedToken = localStorage.getItem('pawtopaw_token');
+      let parsed = saved ? JSON.parse(saved) : null;
+      if (parsed && !parsed.id && savedToken) {
+        const idFromToken = extraerIdDeToken(savedToken);
+        if (idFromToken) parsed.id = idFromToken;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
   });
 
   const [publicaciones, setPublicaciones] = useState([]);
@@ -59,43 +87,29 @@ export default function UserProvider({ children }) {
     }
   });
 
-  // Clave del carrito para el usuario actual
-  const getCartKey = (currentUser = user) => {
-    return currentUser?.id
-      ? `pawtopaw_cart_${currentUser.id}`
-      : (currentUser?.email ? `pawtopaw_cart_${currentUser.email}` : 'pawtopaw_cart_guest');
-  };
-
+  // Carrito persistente y unificado (nunca se borra al cambiar de página o sesión)
   const [carrito, setCarrito] = useState(() => {
     try {
-      const key = user?.id
-        ? `pawtopaw_cart_${user.id}`
-        : (user?.email ? `pawtopaw_cart_${user.email}` : 'pawtopaw_cart_guest');
-      const saved = localStorage.getItem(key);
+      const saved = localStorage.getItem('pawtopaw_cart');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
 
-  // Mantener favoritos y carrito sincronizados si cambia el usuario
+  // Mantener favoritos sincronizados si cambia el usuario
   useEffect(() => {
     try {
       const favKey = getFavKey(user);
       const savedFavs = localStorage.getItem(favKey);
       setFavoritos(savedFavs ? JSON.parse(savedFavs) : []);
-
-      const cartKey = getCartKey(user);
-      const savedCart = localStorage.getItem(cartKey);
-      setCarrito(savedCart ? JSON.parse(savedCart) : []);
     } catch {
       setFavoritos([]);
-      setCarrito([]);
     }
   }, [user]);
 
   const agregarAlCarrito = (producto, cantidad = 1) => {
-    const cartKey = getCartKey(user);
+    if (!producto || !producto.id) return carrito;
     const idNum = Number(producto.id);
     let nuevoCarrito;
 
@@ -121,20 +135,18 @@ export default function UserProvider({ children }) {
     }
 
     setCarrito(nuevoCarrito);
-    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+    localStorage.setItem('pawtopaw_cart', JSON.stringify(nuevoCarrito));
     return nuevoCarrito;
   };
 
   const eliminarDelCarrito = (id) => {
-    const cartKey = getCartKey(user);
     const idNum = Number(id);
     const nuevoCarrito = carrito.filter((item) => Number(item.id) !== idNum);
     setCarrito(nuevoCarrito);
-    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+    localStorage.setItem('pawtopaw_cart', JSON.stringify(nuevoCarrito));
   };
 
   const actualizarCantidadCarrito = (id, delta) => {
-    const cartKey = getCartKey(user);
     const idNum = Number(id);
     let nuevoCarrito = carrito
       .map((item) => {
@@ -147,13 +159,12 @@ export default function UserProvider({ children }) {
       .filter((item) => item.cantidad > 0);
 
     setCarrito(nuevoCarrito);
-    localStorage.setItem(cartKey, JSON.stringify(nuevoCarrito));
+    localStorage.setItem('pawtopaw_cart', JSON.stringify(nuevoCarrito));
   };
 
   const vaciarCarrito = () => {
-    const cartKey = getCartKey(user);
     setCarrito([]);
-    localStorage.setItem(cartKey, JSON.stringify([]));
+    localStorage.setItem('pawtopaw_cart', JSON.stringify([]));
   };
 
   const cantidadTotalCarrito = carrito.reduce(
@@ -269,11 +280,12 @@ export default function UserProvider({ children }) {
         titulo: corregirTexto(art.titulo),
         precio: Number(art.precio),
         imagen: art.imagen,
-        usuario_id: art.usuario_id || 1,
+        usuario_id: art.usuario_id,
+        usuario_email: art.usuario_email,
         estrellas: 5,
         cantidad: 15,
         comprados: 20,
-        vendedor: 'Comunidad PawtoPaw',
+        vendedor: art.vendedor || (art.usuario_id === 1 ? 'Camila Rojas' : 'Comunidad PawtoPaw'),
         descripcion:
           corregirTexto(art.descripcion) ||
           descripcionesIniciales[art.id] ||
@@ -285,6 +297,10 @@ export default function UserProvider({ children }) {
     } catch (error) {
       console.error('Error al obtener artículos:', error);
     }
+  };
+
+  const agregarPublicacionMemoria = (nueva) => {
+    setPublicaciones((prev) => [nueva, ...prev]);
   };
 
   const eliminarPublicacion = async (id) => {
@@ -431,6 +447,7 @@ export default function UserProvider({ children }) {
         esFavorito,
         eliminarPublicacion,
         actualizarPublicacion,
+        agregarPublicacionMemoria,
         carrito,
         agregarAlCarrito,
         eliminarDelCarrito,

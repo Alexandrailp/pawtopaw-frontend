@@ -38,19 +38,27 @@ export default function Perfil() {
     : [];
 
   // Publicaciones creadas por el usuario actual
-  const userKey = user?.id 
-    ? `pawtopaw_articulos_usuario_${user.id}` 
-    : (user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null);
-  const misArticulosIds = userKey 
-    ? JSON.parse(localStorage.getItem(userKey) || '[]') 
-    : [];
+  const clavesArticulos = [
+    user?.id ? `pawtopaw_articulos_usuario_${user.id}` : null,
+    user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null,
+    'pawtopaw_mis_articulos'
+  ].filter(Boolean);
+
+  let misArticulosIds = [];
+  clavesArticulos.forEach((key) => {
+    try {
+      const items = JSON.parse(localStorage.getItem(key) || '[]');
+      misArticulosIds = [...misArticulosIds, ...items];
+    } catch {}
+  });
 
   const publicacionesDelUsuario = user
-    ? publicaciones.filter(
-        (p) =>
-          (p.usuario_id && user.id && Number(p.usuario_id) === Number(user.id)) ||
-          misArticulosIds.includes(p.id)
-      )
+    ? publicaciones.filter((p) => {
+        const coincideId = user.id && p.usuario_id && Number(p.usuario_id) === Number(user.id);
+        const coincideEmail = user.email && p.usuario_email && p.usuario_email.toLowerCase() === user.email.toLowerCase();
+        const coincideLocal = misArticulosIds.some((id) => Number(id) === Number(p.id));
+        return coincideId || coincideEmail || coincideLocal;
+      })
     : [];
 
   const listaFavoritos = favoritos || [];
@@ -177,6 +185,7 @@ export default function Perfil() {
                       imagen={pub.imagen}
                       estrellas={pub.estrellas || 5}
                       cantidad={pub.cantidad || 1}
+                      categoria={pub.categoria}
                     />
                     <div className="flex gap-2 mt-2">
                       <Link
@@ -231,6 +240,7 @@ export default function Perfil() {
                       imagen={pub.imagen}
                       estrellas={pub.estrellas || 5}
                       cantidad={pub.cantidad || 1}
+                      categoria={pub.categoria}
                     />
                     <button
                       onClick={() => toggleFavorito(pub)}

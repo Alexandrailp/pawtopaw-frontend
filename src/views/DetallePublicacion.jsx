@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
@@ -14,21 +14,31 @@ const publicaciones = [
 export default function DetallePublicacion() {
   const { id } = useParams();
   const {
+    user,
     publicaciones: publicacionesBackend,
     toggleFavorito,
     esFavorito,
     agregarAlCarrito
   } = useContext(UserContext);
 
+  const [agregadoReciente, setAgregadoReciente] = useState(false);
+
   const listaCompleta = (publicacionesBackend && publicacionesBackend.length > 0)
     ? publicacionesBackend
     : publicaciones;
 
   const publicacion =
-    listaCompleta.find((p) => p.id === Number(id)) ||
-    publicaciones.find((p) => p.id === Number(id)) ||
+    listaCompleta.find((p) => Number(p.id) === Number(id)) ||
+    publicaciones.find((p) => Number(p.id) === Number(id)) ||
     listaCompleta[0] ||
     publicaciones[0];
+
+  const esMiPublicacion = Boolean(
+    user && (
+      (user.id && publicacion.usuario_id && Number(user.id) === Number(publicacion.usuario_id)) ||
+      (user.email && publicacion.usuario_email && user.email.toLowerCase() === publicacion.usuario_email.toLowerCase())
+    )
+  );
 
   const estaEnFavoritos = esFavorito ? esFavorito(publicacion.id) : false;
 
@@ -84,40 +94,79 @@ export default function DetallePublicacion() {
               </p>
             </div>
 
-            <div className="bg-pawLight border border-pawSecondary rounded-2xl p-4 flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-pawSecondary flex items-center justify-center text-lg">
-                🐾
+            <div className="bg-pawLight border border-pawSecondary rounded-2xl p-4 flex items-center justify-between gap-3 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-pawSecondary flex items-center justify-center text-lg shrink-0">
+                  🐾
+                </div>
+                <div>
+                  <p className="text-xs text-pawText/60 font-medium">Publicado por</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-pawText">
+                      {esMiPublicacion
+                        ? `${user?.nombre || user?.email} (Tú)`
+                        : (publicacion.vendedor || 'Comunidad PawtoPaw')}
+                    </p>
+                    {esMiPublicacion && (
+                      <span className="bg-pawAccent text-pawText text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        Tu publicación
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-pawText/60 font-medium">Publicado por</p>
-                <p className="text-sm font-bold text-pawText">{publicacion.vendedor || 'Comunidad PawtoPaw'}</p>
-              </div>
+
+              {esMiPublicacion && (
+                <Link
+                  to={`/editar-publicacion/${publicacion.id}`}
+                  className="bg-white border border-pawSecondary hover:bg-pawSecondary text-pawText font-bold text-xs px-3.5 py-2 rounded-xl transition-colors shadow-2xs"
+                >
+                  ✏️ Editar
+                </Link>
+              )}
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-2">
-            <button
-              onClick={() => {
-                if (agregarAlCarrito) {
-                  agregarAlCarrito(publicacion);
-                  alert(`¡"${publicacion.titulo}" agregado al carrito de compras! 🛒`);
-                }
-              }}
-              className="flex-1 bg-pawPrimary text-white font-bold py-4 rounded-full hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-            >
-              {publicacion.categoria === 'petsitter' ? 'Contratar servicio' : 'Agregar al carrito'}
-            </button>
-            <button
-              onClick={() => toggleFavorito && toggleFavorito(publicacion)}
-              className={`px-6 py-4 font-bold rounded-full transition-all cursor-pointer flex items-center justify-center text-lg ${
-                estaEnFavoritos
-                  ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
-                  : 'bg-pawSecondary text-pawText hover:bg-pawAccent'
-              }`}
-              title={estaEnFavoritos ? 'Quitar de favoritos' : 'Guardar en favoritos'}
-            >
-              ♥
-            </button>
+          <div className="flex flex-col gap-3 mt-2">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => {
+                  if (agregarAlCarrito) {
+                    agregarAlCarrito(publicacion);
+                    setAgregadoReciente(true);
+                  }
+                }}
+                className="flex-1 bg-pawPrimary text-white font-bold py-4 rounded-full hover:opacity-90 hover:scale-[1.01] transition-all shadow-sm cursor-pointer"
+              >
+                {publicacion.categoria === 'petsitter' ? 'Contratar servicio' : 'Agregar al carrito'}
+              </button>
+              <button
+                onClick={() => toggleFavorito && toggleFavorito(publicacion)}
+                className={`px-6 py-4 font-bold rounded-full transition-all cursor-pointer flex items-center justify-center text-lg ${
+                  estaEnFavoritos
+                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
+                    : 'bg-pawSecondary text-pawText hover:bg-pawAccent'
+                }`}
+                title={estaEnFavoritos ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+              >
+                ♥
+              </button>
+            </div>
+
+            {agregadoReciente && (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-4 flex items-center justify-between gap-3 text-sm text-emerald-800 shadow-xs animate-fadeIn">
+                <div className="flex items-center gap-2 font-medium">
+                  <span className="text-lg">✅</span>
+                  <span>¡"{publicacion.titulo}" agregado al carrito de compras!</span>
+                </div>
+                <Link
+                  to="/carrito"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-full text-xs transition-colors shadow-xs shrink-0"
+                >
+                  Ver Carrito 🛒
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
