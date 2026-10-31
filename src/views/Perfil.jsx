@@ -65,10 +65,21 @@ export default function Perfil() {
           return false;
         }
 
-        const coincideId = user.id && p.usuario_id && Number(p.usuario_id) === Number(user.id);
-        const coincideEmail = user.email && p.usuario_email && p.usuario_email.toLowerCase() === user.email.toLowerCase();
+        const coincideEmail = Boolean(
+          user?.email &&
+          p?.usuario_email &&
+          user.email.trim().toLowerCase() === p.usuario_email.trim().toLowerCase()
+        );
+
+        const coincideId = Boolean(
+          !p?.usuario_email &&
+          user?.id &&
+          p?.usuario_id &&
+          Number(user.id) === Number(p.usuario_id)
+        );
+
         const coincideLocal = misArticulosIds.some((id) => Number(id) === Number(p.id));
-        return coincideId || coincideEmail || coincideLocal;
+        return coincideEmail || coincideId || coincideLocal;
       })
     : [];
 

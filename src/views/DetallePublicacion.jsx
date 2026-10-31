@@ -56,12 +56,20 @@ export default function DetallePublicacion() {
 
   const esArticuloBase = Number(publicacion.id) >= 1 && Number(publicacion.id) <= 6;
 
-  const esMiPublicacion = Boolean(
-    user && !esArticuloBase && (
-      (user.id && publicacion.usuario_id && Number(user.id) === Number(publicacion.usuario_id)) ||
-      (user.email && publicacion.usuario_email && user.email.toLowerCase() === user.email.toLowerCase())
-    )
+  const coincideEmail = Boolean(
+    user?.email &&
+    publicacion?.usuario_email &&
+    user.email.trim().toLowerCase() === publicacion.usuario_email.trim().toLowerCase()
   );
+
+  const coincideId = Boolean(
+    !publicacion?.usuario_email &&
+    user?.id &&
+    publicacion?.usuario_id &&
+    Number(user.id) === Number(publicacion.usuario_id)
+  );
+
+  const esMiPublicacion = Boolean(user && !esArticuloBase && (coincideEmail || coincideId));
 
   const estaEnFavoritos = esFavorito ? esFavorito(publicacion.id) : false;
 
