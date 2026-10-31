@@ -3,12 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
 const publicaciones = [
-  { id: 1, categoria: 'petsitter', titulo: 'Paseo de Perros 1 hr', precio: 5000, imagen: 'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?w=800', estrellas: 5, cantidad: 42, vendedor: 'Martín Soto', descripcion: 'Paseos seguros, entretenidos y personalizados por parques de la zona. Incluye hidratación, reporte con fotos en tiempo real y mucha dedicación para que tu perro gaste energía de forma saludable.' },
-  { id: 2, categoria: 'producto', titulo: 'Casa para Gato', precio: 15000, imagen: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800', estrellas: 4, cantidad: 18, vendedor: 'Tienda MascotaFeliz', descripcion: 'Casa acolchada y térmica ideal para el descanso felino. Fabricada con telas suaves de fácil lavado y base antideslizante.' },
-  { id: 3, categoria: 'producto', titulo: 'Alimento Premium 10kg', precio: 35000, imagen: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=800', estrellas: 5, cantidad: 64, vendedor: 'NutriPet Chile', descripcion: 'Fórmula balanceada libre de granos, rica en proteínas de alta calidad, omega 3 y vitaminas esenciales para mantener el pelaje brillante y una digestión óptima.' },
-  { id: 4, categoria: 'petsitter', titulo: 'Cuidado a domicilio (Día)', precio: 20000, imagen: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800', estrellas: 5, cantidad: 31, vendedor: 'Valentina Muñoz', descripcion: 'Cuido a tu mascota en la comodidad de tu hogar para evitarle el estrés del traslado. Incluye alimentación en sus horarios, limpieza, juegos y paseos incluidos.' },
-  { id: 5, categoria: 'producto', titulo: 'Juguete Cuerda Resistente', precio: 8000, imagen: 'https://images.unsplash.com/photo-1535294435445-d7249524ef2e?w=800', estrellas: 4, cantidad: 12, vendedor: 'Tienda MascotaFeliz', descripcion: 'Juguete de algodón trenzado de alta resistencia, ideal para perros que disfrutan morder y jugar a tirar. Ayuda a limpiar los dientes de forma natural.' },
-  { id: 6, categoria: 'petsitter', titulo: 'Guardería Diurna Felina', precio: 12000, imagen: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', estrellas: 5, cantidad: 27, vendedor: 'Carolina Díaz', descripcion: 'Espacio tranquilo, seguro y enriquecido con rascadores y zonas altas para el cuidado diurno de gatitos. Atención personalizada y ambiente libre de estrés.' }
+  { id: 1, categoria: 'petsitter', titulo: 'Paseo de Perros 1 hr', precio: 5000, imagen: 'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?w=800', estrellas: 5, cantidad: 2, vendedor: 'Martín Soto', descripcion: 'Paseos seguros, entretenidos y personalizados por parques de la zona. Incluye hidratación, reporte con fotos en tiempo real y mucha dedicación para que tu perro gaste energía de forma saludable.' },
+  { id: 2, categoria: 'producto', titulo: 'Casa para Gato', precio: 15000, imagen: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800', estrellas: 5, cantidad: 2, vendedor: 'Tienda MascotaFeliz', descripcion: 'Casa acolchada y térmica ideal para el descanso felino. Fabricada con telas suaves de fácil lavado y base antideslizante.' },
+  { id: 3, categoria: 'producto', titulo: 'Alimento Premium 10kg', precio: 35000, imagen: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=800', estrellas: 5, cantidad: 1, vendedor: 'NutriPet Chile', descripcion: 'Fórmula balanceada libre de granos, rica en proteínas de alta calidad, omega 3 y vitaminas esenciales para mantener el pelaje brillante y una digestión óptima.' },
+  { id: 4, categoria: 'petsitter', titulo: 'Cuidado a domicilio (Día)', precio: 20000, imagen: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800', estrellas: 5, cantidad: 1, vendedor: 'Valentina Muñoz', descripcion: 'Cuido a tu mascota en la comodidad de tu hogar para evitarle el estrés del traslado. Incluye alimentación en sus horarios, limpieza, juegos y paseos incluidos.' },
+  { id: 5, categoria: 'producto', titulo: 'Juguete Cuerda Resistente', precio: 8000, imagen: 'https://images.unsplash.com/photo-1535294435445-d7249524ef2e?w=800', estrellas: 4, cantidad: 1, vendedor: 'Tienda MascotaFeliz', descripcion: 'Juguete de algodón trenzado de alta resistencia, ideal para perros que disfrutan morder y jugar a tirar. Ayuda a limpiar los dientes de forma natural.' },
+  { id: 6, categoria: 'petsitter', titulo: 'Guardería Diurna Felina', precio: 12000, imagen: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800', estrellas: 5, cantidad: 2, vendedor: 'Carolina Díaz', descripcion: 'Espacio tranquilo, seguro y enriquecido con rascadores y zonas altas para el cuidado diurno de gatitos. Atención personalizada y ambiente libre de estrés.' }
 ];
 
 const descripcionesEstrellas = {
@@ -23,6 +23,7 @@ export default function DetallePublicacion() {
   const { id } = useParams();
   const {
     user,
+    cargandoArticulos,
     publicaciones: publicacionesBackend,
     toggleFavorito,
     esFavorito,
@@ -53,9 +54,34 @@ export default function DetallePublicacion() {
 
   const publicacion =
     listaCompleta.find((p) => Number(p.id) === Number(id)) ||
-    publicaciones.find((p) => Number(p.id) === Number(id)) ||
-    listaCompleta[0] ||
-    publicaciones[0];
+    publicaciones.find((p) => Number(p.id) === Number(id));
+
+  if (!publicacion) {
+    if (cargandoArticulos) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-28 flex flex-col items-center justify-center text-center">
+          <div className="w-12 h-12 border-4 border-pawPrimary border-t-transparent rounded-full animate-spin mb-4" />
+          <h2 className="text-xl font-bold text-pawText">Cargando publicación...</h2>
+          <p className="text-sm text-pawText/70 mt-1">Obteniendo los detalles y valoraciones actualizadas</p>
+        </div>
+      );
+    }
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-28 flex flex-col items-center justify-center text-center">
+        <span className="text-5xl mb-4">🐾</span>
+        <h2 className="text-2xl font-bold text-pawText">Publicación no encontrada</h2>
+        <p className="text-sm text-pawText/70 mt-2 mb-6 max-w-md">
+          La publicación que buscas no existe o fue eliminada por su dueño.
+        </p>
+        <Link
+          to="/"
+          className="bg-pawPrimary text-white font-bold px-6 py-3 rounded-full hover:opacity-90 transition-opacity text-sm cursor-pointer shadow-sm"
+        >
+          Volver al Inicio
+        </Link>
+      </div>
+    );
+  }
 
   const esArticuloBase = Number(publicacion.id) >= 1 && Number(publicacion.id) <= 6;
 
@@ -105,7 +131,7 @@ export default function DetallePublicacion() {
   const totalResenas = resenas.length;
   const promedioEstrellas = totalResenas > 0
     ? (resenas.reduce((acc, r) => acc + (Number(r.calificacion) || 5), 0) / totalResenas).toFixed(1)
-    : (publicacion.cantidad > 0 ? (publicacion.estrellas || 5).toFixed(1) : '0.0');
+    : (publicacion?.cantidad > 0 ? (publicacion.estrellas || 0).toFixed(1) : '0.0');
 
   const desgloseEstrellas = [5, 4, 3, 2, 1].map((n) => {
     const cuenta = resenas.filter((r) => Math.round(Number(r.calificacion)) === n).length;

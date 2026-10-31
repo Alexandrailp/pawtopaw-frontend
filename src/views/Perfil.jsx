@@ -205,8 +205,8 @@ export default function Perfil() {
                       titulo={pub.titulo}
                       precio={pub.precio}
                       imagen={pub.imagen}
-                      estrellas={pub.estrellas || 5}
-                      cantidad={pub.cantidad || 1}
+                      estrellas={pub.estrellas}
+                      cantidad={pub.cantidad}
                       categoria={pub.categoria}
                     />
                     <div className="flex gap-2 mt-2">
@@ -260,8 +260,8 @@ export default function Perfil() {
                       titulo={pub.titulo}
                       precio={pub.precio}
                       imagen={pub.imagen}
-                      estrellas={pub.estrellas || 5}
-                      cantidad={pub.cantidad || 1}
+                      estrellas={pub.estrellas}
+                      cantidad={pub.cantidad}
                       categoria={pub.categoria}
                     />
                     <button

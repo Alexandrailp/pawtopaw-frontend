@@ -98,7 +98,23 @@ export default function UserProvider({ children }) {
     }
   });
 
-  const [publicaciones, setPublicaciones] = useState([]);
+  const [publicaciones, setPublicaciones] = useState(() => {
+    try {
+      const guardadas = localStorage.getItem('pawtopaw_publicaciones_cache');
+      return guardadas ? JSON.parse(guardadas) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [cargandoArticulos, setCargandoArticulos] = useState(() => {
+    try {
+      const guardadas = localStorage.getItem('pawtopaw_publicaciones_cache');
+      return !guardadas;
+    } catch {
+      return true;
+    }
+  });
 
   // Clave de favoritos para el usuario actual
   const getFavKey = (currentUser = user) => {
@@ -363,9 +379,14 @@ export default function UserProvider({ children }) {
       });
 
       setPublicaciones(articulosFormateados);
+      try {
+        localStorage.setItem('pawtopaw_publicaciones_cache', JSON.stringify(articulosFormateados));
+      } catch {}
+      setCargandoArticulos(false);
       return articulosFormateados;
     } catch (error) {
       console.error('Error al obtener artículos:', error);
+      setCargandoArticulos(false);
     }
   };
 
@@ -641,14 +662,26 @@ export default function UserProvider({ children }) {
   };
 
   const agregarPublicacionMemoria = (nueva) => {
-    setPublicaciones((prev) => [nueva, ...prev]);
+    setPublicaciones((prev) => {
+      const actualizadas = [nueva, ...prev];
+      try {
+        localStorage.setItem('pawtopaw_publicaciones_cache', JSON.stringify(actualizadas));
+      } catch {}
+      return actualizadas;
+    });
   };
 
   const eliminarPublicacion = async (id) => {
     const idNum = Number(id);
 
-    // 1. Eliminar de publicaciones en memoria
-    setPublicaciones((prev) => prev.filter((p) => Number(p.id) !== idNum));
+    // 1. Eliminar de publicaciones en memoria y caché
+    setPublicaciones((prev) => {
+      const filtradas = prev.filter((p) => Number(p.id) !== idNum);
+      try {
+        localStorage.setItem('pawtopaw_publicaciones_cache', JSON.stringify(filtradas));
+      } catch {}
+      return filtradas;
+    });
 
     // 2. Eliminar de la clave de usuario en localStorage
     const userKey = user?.id 
@@ -856,6 +889,7 @@ export default function UserProvider({ children }) {
         login,
         register,
         logout,
+        cargandoArticulos,
         publicaciones,
         setPublicaciones,
         obtenerArticulos,
