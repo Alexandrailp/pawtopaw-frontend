@@ -3,20 +3,33 @@ import { useNavigate, Link } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
 
 export default function EditarPerfil() {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, actualizarPerfilUsuario } = useContext(UserContext);
   const navigate = useNavigate();
 
   const [nombre, setNombre] = useState(user?.nombre || '');
   const [email, setEmail] = useState(user?.email || '');
   const [telefono, setTelefono] = useState(user?.telefono || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [guardando, setGuardando] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!nombre || !email) return alert('El nombre y el email son obligatorios');
+    if (!nombre.trim() || !email.trim()) return alert('El nombre y el email son obligatorios');
 
-    setUser({ ...user, nombre, email, telefono, avatar });
-    navigate('/perfil');
+    try {
+      setGuardando(true);
+      if (actualizarPerfilUsuario) {
+        await actualizarPerfilUsuario({ nombre, email, telefono, avatar });
+      } else {
+        setUser({ ...user, nombre, email, telefono, avatar });
+      }
+      alert('¡Perfil y publicaciones actualizados con éxito!');
+      navigate('/perfil');
+    } catch (err) {
+      alert(err.message || 'Error al actualizar el perfil');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (

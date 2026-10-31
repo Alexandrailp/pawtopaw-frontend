@@ -324,7 +324,7 @@ export default function UserProvider({ children }) {
         const baseArt = resenasBase[art.id] || [];
         const todasResenas = [...resenasLocales, ...baseArt];
 
-        let estrellas = Number(art.estrellas) || 5;
+        let estrellas = Number(art.estrellas) || 0;
         let cantidad = Number(art.cantidad_resenas) || 0;
 
         if (todasResenas.length > 0) {
@@ -332,6 +332,13 @@ export default function UserProvider({ children }) {
           estrellas = Math.round(suma / todasResenas.length);
           cantidad = Math.max(cantidad, todasResenas.length);
         }
+
+        const esPropia = Boolean(
+          user && (
+            (user.id && art.usuario_id && Number(user.id) === Number(art.usuario_id)) ||
+            (user.email && art.usuario_email && user.email.toLowerCase() === art.usuario_email.toLowerCase())
+          )
+        );
 
         return {
           id: art.id,
@@ -341,13 +348,13 @@ export default function UserProvider({ children }) {
           imagen: art.imagen,
           usuario_id: art.usuario_id,
           usuario_email: art.usuario_email,
-          estrellas: Math.min(5, Math.max(1, estrellas)),
-          cantidad: cantidad || 1,
+          estrellas: cantidad > 0 ? Math.min(5, Math.max(1, estrellas)) : 0,
+          cantidad: cantidad,
           comprados: 20,
           vendedor:
             Number(art.id) >= 1 && Number(art.id) <= 6
               ? (vendedoresIniciales[art.id] || 'Comunidad PawtoPaw')
-              : (art.vendedor || 'Comunidad PawtoPaw'),
+              : (esPropia ? (user.nombre || art.vendedor || 'Comunidad PawtoPaw') : (art.vendedor || 'Comunidad PawtoPaw')),
           descripcion:
             corregirTexto(art.descripcion) ||
             descripcionesIniciales[art.id] ||
@@ -608,6 +615,79 @@ export default function UserProvider({ children }) {
     return data;
   };
 
+  const actualizarPerfilUsuario = async ({ nombre, email, telefono, avatar }) => {
+    const nombreLimpio = (nombre || '').trim();
+    const emailLimpio = (email || '').trim();
+
+    if (!nombreLimpio || !emailLimpio) {
+      throw new Error('El nombre y el correo electrónico son obligatorios.');
+    }
+
+    const usuarioActualizado = {
+      ...user,
+      nombre: nombreLimpio,
+      email: emailLimpio,
+      telefono: telefono || '',
+      avatar: avatar || ''
+    };
+
+    // 1. Guardar de inmediato localmente
+    setUser(usuarioActualizado);
+    localStorage.setItem('pawtopaw_user', JSON.stringify(usuarioActualizado));
+
+    // 2. Si cambió el correo, migrar claves del usuario en localStorage
+    if (user?.email && user.email.toLowerCase() !== emailLimpio.toLowerCase()) {
+      try {
+        const oldKey = `pawtopaw_articulos_usuario_${user.email}`;
+        const newKey = `pawtopaw_articulos_usuario_${emailLimpio}`;
+        const items = localStorage.getItem(oldKey);
+        if (items) {
+          localStorage.setItem(newKey, items);
+          localStorage.removeItem(oldKey);
+        }
+      } catch {}
+    }
+
+    // 3. Actualizar el vendedor de todas sus publicaciones en memoria
+    setPublicaciones((prev) =>
+      prev.map((p) => {
+        const esSuya =
+          (user?.id && p.usuario_id && Number(p.usuario_id) === Number(user.id)) ||
+          (user?.email && p.usuario_email && p.usuario_email.toLowerCase() === user.email.toLowerCase());
+
+        if (esSuya) {
+          return {
+            ...p,
+            vendedor: nombreLimpio,
+            usuario_email: emailLimpio
+          };
+        }
+        return p;
+      })
+    );
+
+    // 4. Intentar actualizar en el backend
+    if (user?.id && token) {
+      try {
+        await fetch(`${API_URL}/usuarios/${user.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nombre: nombreLimpio,
+            email: emailLimpio
+          })
+        });
+      } catch (e) {
+        console.warn('Backend actualizar usuario warning:', e);
+      }
+    }
+
+    return usuarioActualizado;
+  };
+
   const logout = () => {
     updateUser(null);
   };
@@ -640,7 +720,8 @@ export default function UserProvider({ children }) {
         totalCarrito,
         finalizarCompra,
         obtenerResenasArticulo,
-        calificarArticulo
+        calificarArticulo,
+        actualizarPerfilUsuario
       }}
     >
       {children}

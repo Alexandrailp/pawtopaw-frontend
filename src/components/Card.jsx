@@ -33,9 +33,18 @@ export default function Card({ id, titulo, precio, imagen, estrellas, cantidad, 
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-amber-400 text-sm tracking-wider">
-                {'★'.repeat(Math.min(5, Math.max(1, estrellas || 5)))}{'☆'.repeat(5 - Math.min(5, Math.max(1, estrellas || 5)))}
+                {Number(cantidad) > 0 ? (
+                  <>
+                    {'★'.repeat(Math.min(5, Math.max(1, estrellas || 5)))}
+                    {'☆'.repeat(5 - Math.min(5, Math.max(1, estrellas || 5)))}
+                  </>
+                ) : (
+                  <span className="text-gray-300">☆☆☆☆☆</span>
+                )}
               </span>
-              <span className="text-xs text-pawText/70 font-semibold">({cantidad || 1})</span>
+              <span className="text-xs text-pawText/70 font-semibold">
+                ({Number(cantidad) || 0})
+              </span>
             </div>
           </div>
 

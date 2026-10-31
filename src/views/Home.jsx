@@ -110,7 +110,7 @@ export default function Home() {
       if (orden === 'mayor-menor') return b.precio - a.precio;
       if (orden === 'menor-mayor') return a.precio - b.precio;
       if (orden === 'mas-comprados') return (b.comprados || 0) - (a.comprados || 0);
-      if (orden === 'mas-recomendados') return (b.estrellas || 5) - (a.estrellas || 5) || (b.cantidad || 0) - (a.cantidad || 0);
+      if (orden === 'mas-recomendados') return (b.estrellas || 0) - (a.estrellas || 0) || (b.cantidad || 0) - (a.cantidad || 0);
       return 0;
     });
 

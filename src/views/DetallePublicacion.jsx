@@ -102,11 +102,11 @@ export default function DetallePublicacion() {
   const totalResenas = resenas.length;
   const promedioEstrellas = totalResenas > 0
     ? (resenas.reduce((acc, r) => acc + (Number(r.calificacion) || 5), 0) / totalResenas).toFixed(1)
-    : (publicacion.estrellas || 5).toFixed(1);
+    : (publicacion.cantidad > 0 ? (publicacion.estrellas || 5).toFixed(1) : '0.0');
 
   const desgloseEstrellas = [5, 4, 3, 2, 1].map((n) => {
     const cuenta = resenas.filter((r) => Math.round(Number(r.calificacion)) === n).length;
-    const porcentaje = totalResenas > 0 ? Math.round((cuenta / totalResenas) * 100) : (n === 5 ? 100 : 0);
+    const porcentaje = totalResenas > 0 ? Math.round((cuenta / totalResenas) * 100) : 0;
     return { estrellas: n, cuenta, porcentaje };
   });
 
@@ -181,12 +181,14 @@ export default function DetallePublicacion() {
               <div className="flex text-amber-400 text-lg">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <span key={i}>
-                    {i <= Math.round(Number(promedioEstrellas)) ? '★' : '☆'}
+                    {totalResenas > 0 && i <= Math.round(Number(promedioEstrellas)) ? '★' : '☆'}
                   </span>
                 ))}
               </div>
               <span className="text-sm font-extrabold text-pawText group-hover:text-pawPrimary group-hover:underline underline-offset-4 transition-all">
-                {promedioEstrellas} ({totalResenas || publicacion.cantidad || 1} valoraciones)
+                {totalResenas > 0
+                  ? `${promedioEstrellas} (${totalResenas} ${totalResenas === 1 ? 'valoración' : 'valoraciones'})`
+                  : 'Sin valoraciones aún (0)'}
               </span>
             </a>
 
@@ -295,7 +297,9 @@ export default function DetallePublicacion() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-pawText/60 mb-2">Puntuación General</p>
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-5xl font-black text-pawText">{promedioEstrellas}</span>
+                <span className="text-5xl font-black text-pawText">
+                  {totalResenas > 0 ? promedioEstrellas : '0.0'}
+                </span>
                 <span className="text-lg font-bold text-pawText/50">de 5</span>
               </div>
 
@@ -303,12 +307,14 @@ export default function DetallePublicacion() {
               <div className="flex text-amber-400 text-2xl mb-2">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <span key={i}>
-                    {i <= Math.round(Number(promedioEstrellas)) ? '★' : '☆'}
+                    {totalResenas > 0 && i <= Math.round(Number(promedioEstrellas)) ? '★' : '☆'}
                   </span>
                 ))}
               </div>
               <p className="text-xs text-pawText/70 font-medium mb-6">
-                Basado en {totalResenas} {totalResenas === 1 ? 'opinión' : 'opiniones'} verificadas
+                {totalResenas > 0
+                  ? `Basado en ${totalResenas} ${totalResenas === 1 ? 'opinión' : 'opiniones'} verificadas`
+                  : 'Esta publicación aún no tiene opiniones'}
               </p>
 
               {/* Barras de distribución */}
