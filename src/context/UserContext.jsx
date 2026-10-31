@@ -387,6 +387,9 @@ export default function UserProvider({ children }) {
         const data = await res.json();
         resenasBackend = data.map((r) => ({
           id: `backend_${r.id}`,
+          raw_id: r.id,
+          usuario_id: r.usuario_id,
+          articulo_id: r.articulo_id,
           calificacion: Number(r.calificacion),
           comentario: r.comentario,
           autor: r.autor || (r.autor_email ? r.autor_email.split('@')[0] : 'Cliente PawtoPaw'),
@@ -403,6 +406,10 @@ export default function UserProvider({ children }) {
       const clave = `${r.calificacion}_${r.comentario}_${r.autor}`;
       if (!mapa.has(clave)) {
         mapa.set(clave, r);
+      } else {
+        // Enriquecer con IDs o usuario_id si el nuevo objeto los tiene
+        const existente = mapa.get(clave);
+        mapa.set(clave, { ...existente, ...r });
       }
     });
 
@@ -423,8 +430,9 @@ export default function UserProvider({ children }) {
       nombreAutor ||
       (user?.email ? user.email.split('@')[0] : 'Cliente PawtoPaw');
 
-    const nuevaResena = {
+    let nuevaResena = {
       id: Date.now(),
+      usuario_id: user?.id || null,
       articulo_id: idNum,
       calificacion: califNum,
       comentario: textoComentario,
@@ -437,20 +445,11 @@ export default function UserProvider({ children }) {
       })
     };
 
-    let guardadas = [];
-    try {
-      guardadas = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
-    } catch {
-      guardadas = [];
-    }
-    const actualizadas = [nuevaResena, ...guardadas];
-    localStorage.setItem(`pawtopaw_resenas_${idNum}`, JSON.stringify(actualizadas));
-
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      await fetch(`${API_URL}/resenas`, {
+      const res = await fetch(`${API_URL}/resenas`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -460,9 +459,26 @@ export default function UserProvider({ children }) {
           articulo_id: idNum
         })
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.resena?.id) {
+          nuevaResena.id = `backend_${data.resena.id}`;
+          nuevaResena.raw_id = data.resena.id;
+          nuevaResena.usuario_id = data.resena.usuario_id;
+        }
+      }
     } catch (e) {
       console.warn('Backend resenas warning:', e);
     }
+
+    let guardadas = [];
+    try {
+      guardadas = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
+    } catch {
+      guardadas = [];
+    }
+    const actualizadas = [nuevaResena, ...guardadas];
+    localStorage.setItem(`pawtopaw_resenas_${idNum}`, JSON.stringify(actualizadas));
 
     setPublicaciones((prev) =>
       prev.map((p) => {
@@ -484,6 +500,144 @@ export default function UserProvider({ children }) {
     );
 
     return nuevaResena;
+  };
+
+  const editarCalificacionArticulo = async ({ resenaId, articulo_id, calificacion, comentario }) => {
+    const idNum = Number(articulo_id);
+    const califNum = Math.min(5, Math.max(1, Number(calificacion)));
+    const textoComentario = (comentario || '').trim();
+
+    if (!textoComentario) {
+      throw new Error('Por favor escribe un comentario para tu valoración.');
+    }
+
+    // 1. Actualizar en localStorage
+    let guardadas = [];
+    try {
+      guardadas = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
+    } catch {
+      guardadas = [];
+    }
+
+    const fechaEditada = `${new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })} (editada)`;
+
+    const rawBackendId = String(resenaId).replace('backend_', '');
+    const actualizadas = guardadas.map((r) => {
+      const coincide =
+        String(r.id) === String(resenaId) ||
+        String(r.id) === `backend_${resenaId}` ||
+        (r.raw_id && String(r.raw_id) === String(rawBackendId));
+      if (coincide) {
+        return {
+          ...r,
+          calificacion: califNum,
+          comentario: textoComentario,
+          fecha: fechaEditada
+        };
+      }
+      return r;
+    });
+    localStorage.setItem(`pawtopaw_resenas_${idNum}`, JSON.stringify(actualizadas));
+
+    // 2. Si es una reseña del backend, enviar petición al servidor
+    if (!isNaN(Number(rawBackendId)) && token) {
+      try {
+        await fetch(`${API_URL}/resenas/${rawBackendId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            comentario: textoComentario,
+            calificacion: califNum,
+            usuario_id: user?.id
+          })
+        });
+      } catch (e) {
+        console.warn('Backend editar resena warning:', e);
+      }
+    }
+
+    // 3. Recalcular promedio de estrellas
+    setPublicaciones((prev) =>
+      prev.map((p) => {
+        if (Number(p.id) === idNum) {
+          const todas = actualizadas.filter((r) => Number(r.articulo_id || idNum) === idNum);
+          if (todas.length > 0) {
+            const suma = todas.reduce((acc, r) => acc + (Number(r.calificacion) || 5), 0);
+            return {
+              ...p,
+              estrellas: Math.round(suma / todas.length)
+            };
+          }
+        }
+        return p;
+      })
+    );
+
+    return { id: resenaId, calificacion: califNum, comentario: textoComentario, fecha: fechaEditada };
+  };
+
+  const eliminarCalificacionArticulo = async ({ resenaId, articulo_id }) => {
+    const idNum = Number(articulo_id);
+
+    // 1. Eliminar de localStorage
+    let guardadas = [];
+    try {
+      guardadas = JSON.parse(localStorage.getItem(`pawtopaw_resenas_${idNum}`) || '[]');
+    } catch {
+      guardadas = [];
+    }
+
+    const rawBackendId = String(resenaId).replace('backend_', '');
+    const filtradas = guardadas.filter((r) => {
+      const coincide =
+        String(r.id) === String(resenaId) ||
+        String(r.id) === `backend_${resenaId}` ||
+        (r.raw_id && String(r.raw_id) === String(rawBackendId));
+      return !coincide;
+    });
+    localStorage.setItem(`pawtopaw_resenas_${idNum}`, JSON.stringify(filtradas));
+
+    // 2. Eliminar en el backend si corresponde
+    if (!isNaN(Number(rawBackendId)) && token) {
+      try {
+        await fetch(`${API_URL}/resenas/${rawBackendId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+      } catch (e) {
+        console.warn('Backend eliminar resena warning:', e);
+      }
+    }
+
+    // 3. Recalcular promedio y cantidad
+    setPublicaciones((prev) =>
+      prev.map((p) => {
+        if (Number(p.id) === idNum) {
+          const nuevaCantidad = Math.max(0, (Number(p.cantidad) || 0) - 1);
+          let nuevoPromedio = p.estrellas;
+          if (filtradas.length > 0) {
+            const suma = filtradas.reduce((acc, r) => acc + (Number(r.calificacion) || 5), 0);
+            nuevoPromedio = Math.round(suma / filtradas.length);
+          } else if (nuevaCantidad === 0) {
+            nuevoPromedio = 0;
+          }
+          return {
+            ...p,
+            estrellas: nuevoPromedio,
+            cantidad: nuevaCantidad
+          };
+        }
+        return p;
+      })
+    );
+
+    return true;
   };
 
   const agregarPublicacionMemoria = (nueva) => {
@@ -721,6 +875,8 @@ export default function UserProvider({ children }) {
         finalizarCompra,
         obtenerResenasArticulo,
         calificarArticulo,
+        editarCalificacionArticulo,
+        eliminarCalificacionArticulo,
         actualizarPerfilUsuario
       }}
     >

@@ -28,7 +28,9 @@ export default function DetallePublicacion() {
     esFavorito,
     agregarAlCarrito,
     obtenerResenasArticulo,
-    calificarArticulo
+    calificarArticulo,
+    editarCalificacionArticulo,
+    eliminarCalificacionArticulo
   } = useContext(UserContext);
 
   const [agregadoReciente, setAgregadoReciente] = useState(false);
@@ -43,6 +45,7 @@ export default function DetallePublicacion() {
   const [enviando, setEnviando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
   const [mensajeError, setMensajeError] = useState('');
+  const [resenaEnEdicion, setResenaEnEdicion] = useState(null);
 
   const listaCompleta = (publicacionesBackend && publicacionesBackend.length > 0)
     ? publicacionesBackend
@@ -110,6 +113,55 @@ export default function DetallePublicacion() {
     return { estrellas: n, cuenta, porcentaje };
   });
 
+  const esMiResena = (r) => {
+    if (!user) return false;
+    const coincideId = user.id && r.usuario_id && Number(user.id) === Number(r.usuario_id);
+    const coincideEmail = user.email && r.autor_email && user.email.trim().toLowerCase() === r.autor_email.trim().toLowerCase();
+    const coincideNombre = user.nombre && r.autor && user.nombre.trim().toLowerCase() === r.autor.trim().toLowerCase();
+    return Boolean(coincideEmail || coincideId || coincideNombre);
+  };
+
+  const iniciarEdicion = (r) => {
+    setResenaEnEdicion(r);
+    setCalificacionSeleccionada(Number(r.calificacion) || 5);
+    setComentarioTexto(r.comentario || '');
+    setMensajeError('');
+    setMensajeExito('');
+    const formEl = document.getElementById('form-valoracion');
+    if (formEl) {
+      formEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const cancelarEdicion = () => {
+    setResenaEnEdicion(null);
+    setCalificacionSeleccionada(5);
+    setComentarioTexto('');
+    setMensajeError('');
+  };
+
+  const handleEliminarResena = async (r) => {
+    const confirmar = window.confirm('¿Estás seguro de que deseas eliminar tu valoración?');
+    if (!confirmar) return;
+
+    try {
+      if (eliminarCalificacionArticulo) {
+        await eliminarCalificacionArticulo({
+          resenaId: r.id,
+          articulo_id: publicacion.id
+        });
+      }
+      setResenas((prev) => prev.filter((item) => String(item.id) !== String(r.id)));
+      if (resenaEnEdicion && String(resenaEnEdicion.id) === String(r.id)) {
+        cancelarEdicion();
+      }
+      setMensajeExito('Tu valoración ha sido eliminada con éxito.');
+      setTimeout(() => setMensajeExito(''), 5000);
+    } catch (err) {
+      alert(err.message || 'Error al eliminar la valoración');
+    }
+  };
+
   const handleSubmitResena = async (e) => {
     e.preventDefault();
     setMensajeError('');
@@ -122,16 +174,34 @@ export default function DetallePublicacion() {
 
     try {
       setEnviando(true);
-      const nueva = await calificarArticulo({
-        articulo_id: publicacion.id,
-        calificacion: calificacionSeleccionada,
-        comentario: comentarioTexto,
-        nombreAutor: nombreInvitado
-      });
+      if (resenaEnEdicion) {
+        // Modo Edición
+        const editada = await editarCalificacionArticulo({
+          resenaId: resenaEnEdicion.id,
+          articulo_id: publicacion.id,
+          calificacion: calificacionSeleccionada,
+          comentario: comentarioTexto
+        });
 
-      setResenas((prev) => [nueva, ...prev]);
-      setComentarioTexto('');
-      setMensajeExito(`¡Muchas gracias! Tu valoración de ${calificacionSeleccionada} estrellas ha sido registrada con éxito.`);
+        setResenas((prev) =>
+          prev.map((r) => (String(r.id) === String(resenaEnEdicion.id) ? { ...r, ...editada } : r))
+        );
+        setResenaEnEdicion(null);
+        setComentarioTexto('');
+        setMensajeExito('¡Tu valoración ha sido actualizada con éxito!');
+      } else {
+        // Modo Creación
+        const nueva = await calificarArticulo({
+          articulo_id: publicacion.id,
+          calificacion: calificacionSeleccionada,
+          comentario: comentarioTexto,
+          nombreAutor: nombreInvitado
+        });
+
+        setResenas((prev) => [nueva, ...prev]);
+        setComentarioTexto('');
+        setMensajeExito(`¡Muchas gracias! Tu valoración de ${calificacionSeleccionada} estrellas ha sido registrada con éxito.`);
+      }
       setTimeout(() => setMensajeExito(''), 7000);
     } catch (err) {
       setMensajeError(err.message || 'Error al guardar tu valoración.');
@@ -344,13 +414,27 @@ export default function DetallePublicacion() {
             </div>
           </div>
 
-          {/* Columna Derecha: Formulario para Calificar */}
-          <div className="lg:col-span-7 bg-white border border-pawSecondary rounded-2xl p-6 shadow-2xs">
-            <h3 className="text-lg font-bold text-pawText mb-1 flex items-center gap-2">
-              <span>✍️</span> Deja tu valoración
-            </h3>
+          {/* Columna Derecha: Formulario para Calificar o Editar */}
+          <div id="form-valoracion" className="lg:col-span-7 bg-white border border-pawSecondary rounded-2xl p-6 shadow-2xs">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-lg font-bold text-pawText flex items-center gap-2">
+                <span>{resenaEnEdicion ? '✏️' : '✍️'}</span>
+                {resenaEnEdicion ? 'Editando tu valoración' : 'Deja tu valoración'}
+              </h3>
+              {resenaEnEdicion && (
+                <button
+                  type="button"
+                  onClick={cancelarEdicion}
+                  className="text-xs font-bold text-red-500 hover:text-red-700 hover:underline cursor-pointer transition-colors"
+                >
+                  ✕ Cancelar edición
+                </button>
+              )}
+            </div>
             <p className="text-xs text-pawText/70 mb-5">
-              Comparte tu experiencia para ayudar a otros amantes de las mascotas.
+              {resenaEnEdicion
+                ? 'Modifica las estrellas y tu comentario para actualizar tu opinión.'
+                : 'Comparte tu experiencia para ayudar a otros amantes de las mascotas.'}
             </p>
 
             {mensajeExito && (
@@ -430,13 +514,28 @@ export default function DetallePublicacion() {
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={enviando}
-                className="w-full bg-pawPrimary hover:opacity-95 text-white font-bold py-3 px-6 rounded-full transition-all text-sm shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {enviando ? 'Enviando valoración...' : 'Publicar valoración ⭐'}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={enviando}
+                  className="flex-1 bg-pawPrimary hover:opacity-95 text-white font-bold py-3 px-6 rounded-full transition-all text-sm shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {enviando
+                    ? 'Guardando...'
+                    : resenaEnEdicion
+                    ? 'Guardar cambios ⭐'
+                    : 'Publicar valoración ⭐'}
+                </button>
+                {resenaEnEdicion && (
+                  <button
+                    type="button"
+                    onClick={cancelarEdicion}
+                    className="bg-pawSecondary hover:bg-pawAccent text-pawText font-bold py-3 px-5 rounded-full transition-colors text-sm cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
             </form>
           </div>
         </div>
@@ -477,7 +576,32 @@ export default function DetallePublicacion() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-xs text-pawText/50 font-medium">{r.fecha || 'Reciente'}</span>
+                      <div className="flex items-center gap-2">
+                        {esMiResena(r) && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-pawPrimary font-bold bg-pawAccent px-2 py-0.5 rounded-full">
+                              Tú 🐾
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => iniciarEdicion(r)}
+                              className="text-[11px] text-pawText/70 hover:text-pawPrimary font-bold bg-white border border-pawSecondary hover:bg-pawLight px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                              title="Editar mi valoración"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEliminarResena(r)}
+                              className="text-[11px] text-red-500 hover:text-red-700 font-bold bg-white border border-red-200 hover:bg-red-50 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                              title="Eliminar mi valoración"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                        <span className="text-xs text-pawText/50 font-medium">{r.fecha || 'Reciente'}</span>
+                      </div>
                     </div>
 
                     {/* Estrellas */}
