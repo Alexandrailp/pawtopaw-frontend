@@ -37,11 +37,17 @@ export default function Perfil() {
     ? JSON.parse(localStorage.getItem(pedidosKey) || '[]') 
     : [];
 
-  // Publicaciones creadas por el usuario actual
+  // Limpiar clave global antigua si existiera en el navegador
+  useEffect(() => {
+    try {
+      localStorage.removeItem('pawtopaw_mis_articulos');
+    } catch {}
+  }, []);
+
+  // Publicaciones creadas exclusivamente por el usuario actual
   const clavesArticulos = [
     user?.id ? `pawtopaw_articulos_usuario_${user.id}` : null,
-    user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null,
-    'pawtopaw_mis_articulos'
+    user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null
   ].filter(Boolean);
 
   let misArticulosIds = [];
@@ -54,6 +60,11 @@ export default function Perfil() {
 
   const publicacionesDelUsuario = user
     ? publicaciones.filter((p) => {
+        // Los artículos 1 a 6 son productos base del catálogo de la plataforma y nunca pertenecen a usuarios nuevos
+        if (Number(p.id) >= 1 && Number(p.id) <= 6) {
+          return false;
+        }
+
         const coincideId = user.id && p.usuario_id && Number(p.usuario_id) === Number(user.id);
         const coincideEmail = user.email && p.usuario_email && p.usuario_email.toLowerCase() === user.email.toLowerCase();
         const coincideLocal = misArticulosIds.some((id) => Number(id) === Number(p.id));

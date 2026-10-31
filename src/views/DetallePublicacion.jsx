@@ -54,10 +54,12 @@ export default function DetallePublicacion() {
     listaCompleta[0] ||
     publicaciones[0];
 
+  const esArticuloBase = Number(publicacion.id) >= 1 && Number(publicacion.id) <= 6;
+
   const esMiPublicacion = Boolean(
-    user && (
+    user && !esArticuloBase && (
       (user.id && publicacion.usuario_id && Number(user.id) === Number(publicacion.usuario_id)) ||
-      (user.email && publicacion.usuario_email && user.email.toLowerCase() === publicacion.usuario_email.toLowerCase())
+      (user.email && publicacion.usuario_email && user.email.toLowerCase() === user.email.toLowerCase())
     )
   );
 

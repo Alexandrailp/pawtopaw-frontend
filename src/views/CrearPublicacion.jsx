@@ -64,12 +64,12 @@ export default function CrearPublicacion() {
 
       const nuevoId = data.articulo_id || Date.now();
 
-      // Guardar en almacenamiento local del usuario
+      // Guardar en almacenamiento local exclusivo del usuario actual
       const claves = [
-        `pawtopaw_articulos_usuario_${idUsuario}`,
-        user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null,
-        'pawtopaw_mis_articulos'
+        idUsuario ? `pawtopaw_articulos_usuario_${idUsuario}` : null,
+        user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null
       ].filter(Boolean);
+      try { localStorage.removeItem('pawtopaw_mis_articulos'); } catch {}
 
       claves.forEach((key) => {
         try {

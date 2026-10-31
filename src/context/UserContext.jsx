@@ -36,6 +36,15 @@ const resenasBase = {
   ]
 };
 
+const vendedoresIniciales = {
+  1: 'Martín Soto',
+  2: 'Tienda MascotaFeliz',
+  3: 'NutriPet Chile',
+  4: 'Valentina Muñoz',
+  5: 'Tienda MascotaFeliz',
+  6: 'Carolina Díaz'
+};
+
 const corregirTexto = (texto) => {
   if (!texto || typeof texto !== 'string') return '';
   return texto
@@ -119,6 +128,13 @@ export default function UserProvider({ children }) {
       return [];
     }
   });
+
+  // Limpiar clave global antigua si existiera en el navegador
+  useEffect(() => {
+    try {
+      localStorage.removeItem('pawtopaw_mis_articulos');
+    } catch {}
+  }, []);
 
   // Mantener favoritos sincronizados si cambia el usuario
   useEffect(() => {
@@ -328,7 +344,10 @@ export default function UserProvider({ children }) {
           estrellas: Math.min(5, Math.max(1, estrellas)),
           cantidad: cantidad || 1,
           comprados: 20,
-          vendedor: art.vendedor || (art.usuario_id === 1 ? 'Camila Rojas' : 'Comunidad PawtoPaw'),
+          vendedor:
+            Number(art.id) >= 1 && Number(art.id) <= 6
+              ? (vendedoresIniciales[art.id] || 'Comunidad PawtoPaw')
+              : (art.vendedor || 'Comunidad PawtoPaw'),
           descripcion:
             corregirTexto(art.descripcion) ||
             descripcionesIniciales[art.id] ||
@@ -473,10 +492,13 @@ export default function UserProvider({ children }) {
     // 2. Eliminar de la clave de usuario en localStorage
     const userKey = user?.id 
       ? `pawtopaw_articulos_usuario_${user.id}` 
-      : (user?.email ? `pawtopaw_articulos_usuario_${user.email}` : 'pawtopaw_mis_articulos');
-    const guardados = JSON.parse(localStorage.getItem(userKey) || '[]');
-    const filtrados = guardados.filter((artId) => Number(artId) !== idNum);
-    localStorage.setItem(userKey, JSON.stringify(filtrados));
+      : (user?.email ? `pawtopaw_articulos_usuario_${user.email}` : null);
+    if (userKey) {
+      const guardados = JSON.parse(localStorage.getItem(userKey) || '[]');
+      const filtrados = guardados.filter((artId) => Number(artId) !== idNum);
+      localStorage.setItem(userKey, JSON.stringify(filtrados));
+    }
+    try { localStorage.removeItem('pawtopaw_mis_articulos'); } catch {}
 
     // 3. Eliminar de favoritos si estaba
     const favKey = getFavKey(user);
